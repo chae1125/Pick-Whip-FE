@@ -19,7 +19,7 @@ export function FilterChipsGroup({ title, options, value, onChange }: FilterChip
 
   return (
     <section className="w-full">
-      <h3 className="mb-3 font-regular text-[#4A5565] leading-5">{title}</h3>
+      <h3 className="mb-3 font-regular text-[#0A0A0A] leading-5">{title}</h3>
 
       <div className="flex flex-wrap gap-x-2 gap-y-3">
         {options.map((opt) => (
