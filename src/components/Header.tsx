@@ -49,7 +49,7 @@ export function Header() {
         <HamburgerButton isOpen={isMounted && isOpen} onToggle={toggle} />
       </div>
 
-      <header className="fixed top-0 left-0 z-[40] flex h-14 w-full items-center justify-between border-b border-sub-brown-100 bg-white px-6">
+      <header className="fixed top-0 left-0 z-[40] flex h-14 w-full items-center justify-between bg-[#FCF4F3] px-6">
         <img src={Logo} alt="Pick & Whip" className="site-logo" />
         <div className="flex items-center gap-3">
           <button className="rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100" aria-label="메시지">
