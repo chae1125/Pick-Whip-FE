@@ -16,8 +16,6 @@ body {
   margin: 0;
   min-height: 100dvh;
   background-color: white;
-  color: var(--color-gray-100);
-
   font-family:
     -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', system-ui, sans-serif;
 
@@ -44,29 +42,14 @@ h2 {
 }
 
 p {
-  font-size: 0.9375rem; /* 15px */
+  font-size: 1rem; /* 16px */
   margin: 0;
-  color: var(--color-gray-100);
 }
 
 button {
   cursor: pointer;
   /* border: none; */
   font: inherit;
-}
-
-input,
-textarea {
-  font: inherit;
-  border-radius: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--color-sub-gray-50);
-}
-
-input:focus,
-textarea:focus {
-  outline: none;
-  border-color: var(--color-main-pink-200);
 }
 
 .safe-area {
