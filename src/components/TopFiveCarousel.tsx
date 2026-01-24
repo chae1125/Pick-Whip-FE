@@ -57,6 +57,7 @@ export default function TopFiveCarousel({ items }: { items?: Cake[] }) {
   const len = slides.length
   const [index, setIndex] = useState(0)
   const timerRef = useRef<number | null>(null)
+  const [likedMap, setLikedMap] = useState<Record<number, boolean>>({})
 
   useEffect(() => {
     timerRef.current = window.setInterval(() => {
@@ -69,26 +70,21 @@ export default function TopFiveCarousel({ items }: { items?: Cake[] }) {
 
   const SLIDE_WIDTH = 260
   const GAP = 24
-  const fraction = len > 1 ? index / (len - 1) : 0
-  const TRACK_W = 60
-  const PILL_W = 20
-  const pillPercent = (PILL_W / TRACK_W) * 100
-  const leftPercent = fraction * (100 - pillPercent)
 
   return (
     <div className="relative w-full max-w-lg mx-auto py-6 bg-[#F4D3D3B2]">
-      <div className="relative overflow-hidden">
+      <div className="overflow-hidden">
         <div
-          className="flex items-center gap-6 transition-transform duration-500 ease-out
-                 pl-[calc(50%-130px)] pr-[calc(50%-130px)]"
+          className="flex gap-6 transition-transform duration-500 ease-out
+            pl-[calc(50%-130px)] pr-[calc(50%-130px)]"
           style={{ transform: `translateX(-${index * (SLIDE_WIDTH + GAP)}px)` }}
         >
           {slides.map((s, i) => (
             <div
               key={i}
-              className="w-[260px] h-[220px] flex-shrink-0 overflow-visible flex items-center justify-center"
+              className="w-[260px] h-[220px] flex-shrink-0 flex items-center justify-center"
             >
-              <div className="relative w-[198px] h-[198px] overflow-visible">
+              <div className="relative w-[198px] h-[198px]">
                 <span
                   className="pointer-events-none absolute top-1/6 -translate-y-1/2
                     left-[-60px] z-20 font-['Rammetto_One'] text-[55px] text-[#FF9886] leading-none select-none"
@@ -96,32 +92,34 @@ export default function TopFiveCarousel({ items }: { items?: Cake[] }) {
                   {i + 1}
                 </span>
 
-                <div className="w-full h-full overflow-visible">
-                  <CakeCard
-                    shopName={s.shopName}
-                    rating={s.rating}
-                    productName={s.productName}
-                    price={s.price}
-                    imageUrl={s.imageUrl}
-                  />
-                </div>
+                <CakeCard
+                  shopName={s.shopName}
+                  rating={s.rating}
+                  productName={s.productName}
+                  price={s.price}
+                  imageUrl={s.imageUrl}
+                  isLiked={!!likedMap[i]}
+                  onToggleLike={() =>
+                    setLikedMap((prev) => ({
+                      ...prev,
+                      [i]: !prev[i],
+                    }))
+                  }
+                />
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-center">
-        <div className="relative flex items-center">
-          <div className="h-1 w-20 rounded-full bg-[#FDF4EB]" aria-hidden />
-
+      <div className="mt-4 flex justify-center">
+        <div className="relative h-1 w-20 rounded-full bg-[#FDF4EB]">
           <div
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={Math.max(0, len - 1)}
-            aria-valuenow={index}
-            className="absolute top-0 h-1 w-7 rounded-full bg-[var(--color-main-red-100)] shadow-sm transition-all duration-300 ease-out"
-            style={{ left: `${leftPercent}%` }}
+            className="absolute top-0 h-1 w-7 rounded-full
+              bg-[var(--color-main-red-100)] transition-all duration-300"
+            style={{
+              left: `${len > 1 ? (index / (len - 1)) * 65 : 0}%`,
+            }}
           />
         </div>
       </div>
