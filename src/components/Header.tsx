@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import Logo from '../assets/logo/logo.svg'
 import {
   Bell,
@@ -16,6 +17,8 @@ import { useNavigate } from 'react-router-dom'
 
 export function Header() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isHome = location.pathname === '/'
 
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
@@ -52,7 +55,11 @@ export function Header() {
         <HamburgerButton isOpen={isMounted && isOpen} onToggle={toggle} />
       </div>
 
-      <header className="fixed top-0 left-0 z-[40] flex h-14 w-full items-center justify-between bg-[#FCF4F3] px-6">
+      <header
+        className={`fixed top-0 left-0 z-[40] flex h-14 w-full items-center justify-between bg-[#FCF4F3] px-6
+          ${isHome ? 'border-b border-[#F4D3D3]' : ''}
+        `}
+      >
         <img src={Logo} alt="Pick & Whip" className="site-logo" />
         <div className="flex items-center gap-3">
           <button
