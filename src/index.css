@@ -94,4 +94,12 @@ button {
   /* bottom sheet */
   --color-review-bg: #F5F5F5;
   --color-review-delete: #9C9C9C;
+
+  /* chat*/
+  --color-chat-bg: #F7E6E6;
+  --color-chat-bg-mine: #CC9483;
+  --color-chat-header: #F4D3D3;
+  --color-chat-date: #F4D3D3BF;
+  --color-chat-unread: #FF453A;
+  --color-chat-bubble-other: #FFFFFF;
 }

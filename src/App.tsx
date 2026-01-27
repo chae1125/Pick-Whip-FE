@@ -7,6 +7,8 @@ import Home from './pages/Home'
 import ShopDetailPage from './pages/ShopDetailPage'
 import Map from './pages/Map'
 
+import ChatList from './pages/chat/ChatList'
+import ChatRoom from './pages/chat/ChatRoom'
 
 const router = createBrowserRouter([
   {
@@ -25,6 +27,19 @@ const router = createBrowserRouter([
       {
         path: 'map',
         element: <Map />,
+      },
+    ],
+  },
+  {
+    path: '/chat',
+    children: [
+      {
+        index: true,
+        element: <ChatList />,
+      },
+      {
+        path: ':id',
+        element: <ChatRoom />,
       },
     ],
   },
