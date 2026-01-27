@@ -48,7 +48,7 @@ p {
 
 button {
   cursor: pointer;
-  border: none;
+  /* border: none; */
   font: inherit;
 }
 
@@ -83,4 +83,15 @@ button {
   --color-input-bg: #f5f6f7;
   --color-input-text: #999999;
   --color-input-border: #c2c2c2;
+
+  /* review text color */
+  --color-review-date:#6A7282;
+  --color-review-title: #0A0A0A;
+  --color-review-default: #364153;
+  --color-review-owner-title: #4A5565;
+  --shadow-card: 0px 1px 2px -1px rgba(0, 0, 0, 0.1), 0px 1px 3px 0px rgba(0, 0, 0, 0.1);
+
+  /* bottom sheet */
+  --color-review-bg: #F5F5F5;
+  --color-review-delete: #9C9C9C;
 }
