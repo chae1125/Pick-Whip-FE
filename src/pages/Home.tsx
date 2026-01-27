@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { SearchInput } from '../components/SearchInput'
+import { SearchInput } from '../components/input/SearchInput'
 import { BottomSheet } from '../components/BottomSheet'
 import StoreCard from '../components/StoreCard'
 
