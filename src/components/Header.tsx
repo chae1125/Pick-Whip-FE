@@ -128,7 +128,14 @@ export function Header() {
 
             <div className="border-t !border-[#E5E7EB]">
               <ul className="flex flex-col gap-2 p-4">
-                <DrawerItem icon={<Settings size={18} />} title="설정" onClick={close} />
+                <DrawerItem
+                  icon={<Settings size={18} />}
+                  title="설정"
+                  onClick={() => {
+                    close()
+                    navigate('/setting')
+                  }}
+                />
                 <DrawerItem icon={<LogOut size={18} />} title="로그아웃" onClick={close} />
               </ul>
             </div>

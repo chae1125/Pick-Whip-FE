@@ -11,6 +11,8 @@ import CustomizeLayout from '@/layout/CustomizeLayout'
 import Chat from '@/pages/Chat'
 import Order from '@/pages/Order'
 import Customize from '@/pages/customize/Customize'
+import SettingsPage from '@/pages/SettingsPage'
+import EditMyInfoPage from '@/pages/EditMyInfoPage'
 
 const router = createBrowserRouter([
   {
@@ -22,6 +24,13 @@ const router = createBrowserRouter([
       { path: 'map', element: <Map /> },
       { path: 'chat', element: <Chat /> },
       { path: 'order', element: <Order /> },
+    ],
+  },
+  {
+    element: <CustomizeLayout />,
+    children: [
+      { path: 'setting', element: <SettingsPage /> },
+      { path: 'edit-my-info', element: <EditMyInfoPage /> },
     ],
   },
   {
