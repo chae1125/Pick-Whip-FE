@@ -18,7 +18,6 @@ export function MapInput({ value, onChange, onFilterClick }: MapInputProps) {
         bg-white
       "
     >
-      {/* 검색 영역 */}
       <div className="flex flex-1 items-center gap-2 min-w-0">
         <Search size={18} className="shrink-0 text-[#666]" />
         <input

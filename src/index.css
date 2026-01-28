@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Rammetto+One&display=swap');
 @import 'tailwindcss';
 
 /* 모바일 퍼스트 리셋 */
@@ -5,6 +6,18 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+html,
+body {
+  scrollbar-width: none; 
+  -ms-overflow-style: none; 
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 html {
@@ -48,7 +61,7 @@ p {
 
 button {
   cursor: pointer;
-  border: none;
+  /* border: none; */
   font: inherit;
 }
 
@@ -83,4 +96,23 @@ button {
   --color-input-bg: #f5f6f7;
   --color-input-text: #999999;
   --color-input-border: #c2c2c2;
+
+  /* review text color */
+  --color-review-date:#6A7282;
+  --color-review-title: #0A0A0A;
+  --color-review-default: #364153;
+  --color-review-owner-title: #4A5565;
+  --shadow-card: 0px 1px 2px -1px rgba(0, 0, 0, 0.1), 0px 1px 3px 0px rgba(0, 0, 0, 0.1);
+
+  /* bottom sheet */
+  --color-review-bg: #F5F5F5;
+  --color-review-delete: #9C9C9C;
+
+  /* chat*/
+  --color-chat-bg: #F7E6E6;
+  --color-chat-bg-mine: #CC9483;
+  --color-chat-header: #F4D3D3;
+  --color-chat-date: #F4D3D3BF;
+  --color-chat-unread: #FF453A;
+  --color-chat-bubble-other: #FFFFFF;
 }

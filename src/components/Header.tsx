@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import Logo from '../assets/logo/logo.svg'
 import {
   Bell,
@@ -12,8 +13,13 @@ import {
   ShoppingBag,
 } from 'lucide-react'
 import { HamburgerButton } from './HamburgerButton'
+import { useNavigate } from 'react-router-dom'
 
 export function Header() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const isHome = location.pathname === '/'
+
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
@@ -49,10 +55,18 @@ export function Header() {
         <HamburgerButton isOpen={isMounted && isOpen} onToggle={toggle} />
       </div>
 
-      <header className="fixed top-0 left-0 z-[40] flex h-14 w-full items-center justify-between bg-[#FCF4F3] px-6">
+      <header
+        className={`fixed top-0 left-0 z-[40] flex h-14 w-full items-center justify-between bg-[#FCF4F3] px-6
+          ${isHome ? 'border-b border-[#F4D3D3]' : ''}
+        `}
+      >
         <img src={Logo} alt="Pick & Whip" className="site-logo" />
         <div className="flex items-center gap-3">
-          <button className="rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100" aria-label="메시지">
+          <button
+            className="rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100"
+            aria-label="메시지"
+            onClick={() => navigate('/chat')}
+          >
             <MessageCircle size={25} />
           </button>
           <button className="rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100" aria-label="알림">
