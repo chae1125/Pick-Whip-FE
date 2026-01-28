@@ -14,6 +14,7 @@ import BlankLayout from '@/layout/BlankLayout'
 import Customize from '@/pages/customize/Customize'
 import ChatList from '@/pages/chat/ChatList'
 import ChatRoom from '@/pages/chat/ChatRoom'
+import OrderDetailPage from '@/pages/OrderDetailPage'
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
       { path: 'map', element: <Map /> },
       { path: 'chat', element: <ChatList /> },
       { path: 'order', element: <Order /> },
+      { path: 'order/detail', element: <OrderDetailPage /> },
     ],
   },
   {
