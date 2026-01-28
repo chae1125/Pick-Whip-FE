@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Info } from 'lucide-react'
-import BackArrow from '../assets/img/arrow-left.svg'
+import BackHeader from '@/components/BackHeader'
 import UserInfoField from '../components/UserInfoField'
 import { formatPhoneForView } from '../utils/format'
 import { validateNickname } from '../utils/validate'
@@ -42,21 +42,8 @@ export default function EditMyInfoPage() {
   }
 
   return (
-    // 헤더
     <main className="container bg-white min-h-screen flex flex-col relative">
-      <div className="relative flex items-center h-[56px]">
-        <button
-          type="button"
-          className="absolute flex items-center justify-center"
-          onClick={() => window.history.back()}
-        >
-          <img src={BackArrow} className="h-[15px] w-[8px]" />
-        </button>
-        <p className="!absolute left-1/2 !-translate-x-1/2 !text-[21px] !text-[#0A0A0A]">
-          {' '}
-          내 정보 수정{' '}
-        </p>
-      </div>
+      <BackHeader title="내 정보 수정" bgColor="bg-white" />
 
       <div className="mt-5 flex-1 overflow-y-auto pb-[110px]">
         {/* 프로필 사진 */}
@@ -90,6 +77,7 @@ export default function EditMyInfoPage() {
             <p className="!text-[13px] !text-[#DE000499]">{error}</p>
           </div>
         )}
+
         {/* 전화번호 이메일 생년월일 */}
         <UserInfoField
           label="전화번호"
@@ -110,6 +98,7 @@ export default function EditMyInfoPage() {
           />
         </div>
       </div>
+
       {/* 저장하기 버튼 */}
       <div className="container fixed bottom-0 left-0 right-0 bg-white">
         <div className="-mx-4 h-[0.67px] bg-[#E5E7EB]" />
@@ -118,8 +107,12 @@ export default function EditMyInfoPage() {
             onClick={handleSave}
             disabled={!canSave}
             className={`w-full h-[45px] rounded-[8.75px] border-[1px] text-[14px]
-                ${canSave ? '!bg-[#57504F] !text-white !border-[#57504F]' : '!bg-white !text-[#57504F] !border !border-[#57504F]'}
-                ${isSaving ? 'cursor-not-allowed' : ''}`}
+              ${
+                canSave
+                  ? '!bg-[#57504F] !text-white !border-[#57504F]'
+                  : '!bg-white !text-[#57504F] !border !border-[#57504F]'
+              }
+              ${isSaving ? 'cursor-not-allowed' : ''}`}
           >
             {isSaving ? '저장 중...' : '저장하기'}
           </button>
