@@ -35,7 +35,7 @@ export default function Home() {
   const [sort, setSort] = useState('')
 
   return (
-    <div className="min-h-screen w-full bg-[#FCF4F3]">
+    <div className="min-h-screen w-full bg-[#FCF4F3] mt-14">
       <div className="container !px-0">
         <section className="px-4 pt-4">
           <SearchInput
