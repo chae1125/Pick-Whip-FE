@@ -10,6 +10,8 @@ import CustomizeLayout from '@/layout/CustomizeLayout'
 
 import Chat from '@/pages/Chat'
 import Order from '@/pages/Order'
+import OrderSheet from '@/pages/OrderSheet'
+import BlankLayout from '@/layout/BlankLayout'
 import Customize from '@/pages/customize/Customize'
 
 const router = createBrowserRouter([
@@ -36,6 +38,11 @@ const router = createBrowserRouter([
     path: '/auth',
     element: <AuthLayout />,
     children: [{ path: 'login', element: <Login /> }],
+  },
+  {
+    path: '/orders',
+    element: <BlankLayout />,
+    children: [{ path: ':orderId', element: <OrderSheet /> }],
   },
 ])
 
