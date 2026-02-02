@@ -11,12 +11,13 @@ import CustomizeLayout from '@/layout/CustomizeLayout'
 import Order from '@/pages/Order'
 import OrderSheet from '@/pages/OrderSheet'
 import BlankLayout from '@/layout/BlankLayout'
-import Customize from '@/pages/customize/Customize'
+// import Customize from '@/pages/customize/Customize'
 import ChatList from '@/pages/chat/ChatList'
 import ChatRoom from '@/pages/chat/ChatRoom'
 import OrderDetailPage from '@/pages/OrderDetailPage'
 import SettingsPage from '@/pages/SettingsPage'
 import EditMyInfoPage from '@/pages/EditMyInfoPage'
+import PaymentPage from '@/pages/payment/PaymentPage'
 
 const router = createBrowserRouter([
   {
@@ -39,8 +40,8 @@ const router = createBrowserRouter([
     path: '/customize',
     element: <CustomizeLayout />,
     children: [
-      { index: true, element: <Customize /> },
-      { path: ':cakeId', element: <Customize /> },
+      //   { index: true, element: <Customize /> },
+      //   { path: ':cakeId', element: <Customize /> },
     ],
   },
   {
@@ -52,6 +53,11 @@ const router = createBrowserRouter([
     path: '/orders',
     element: <BlankLayout />,
     children: [{ path: ':orderId', element: <OrderSheet /> }],
+  },
+  {
+    path: '/payment',
+    element: <BlankLayout />,
+    children: [{ index: true, element: <PaymentPage /> }],
   },
   {
     path: '/setting',
