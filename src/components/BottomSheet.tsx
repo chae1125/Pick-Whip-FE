@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-mo
 
 interface BottomSheetProps {
   isOpen: boolean
-  title: string
+  title?: string
   description?: string
   onClose: () => void
   children: ReactNode
