@@ -6,15 +6,18 @@ import Home from '@/pages/Home'
 import Map from '@/pages/Map'
 import Login from '@/pages/auth/Login'
 import MainLayout from '@/layout/MainLayout'
+import CustomizeLayout from '@/layout/CustomizeLayout'
 
 import Order from '@/pages/Order'
 import OrderSheet from '@/pages/OrderSheet'
 import BlankLayout from '@/layout/BlankLayout'
+// import Customize from '@/pages/customize/Customize'
 import ChatList from '@/pages/chat/ChatList'
 import ChatRoom from '@/pages/chat/ChatRoom'
+import OrderDetailPage from '@/pages/OrderDetailPage'
 import SettingsPage from '@/pages/SettingsPage'
 import EditMyInfoPage from '@/pages/EditMyInfoPage'
-
+import PaymentPage from '@/pages/payment/PaymentPage'
 import ShopDetailPage from '@/pages/ShopDetailPage'
 import DesignGalleryPage from '@/pages/DesignGalleryPage'
 import StoreInfoPage from '@/pages/StoreInfoPage'
@@ -30,11 +33,20 @@ const router = createBrowserRouter([
       { path: 'map', element: <Map /> },
       { path: 'chat', element: <ChatList /> },
       { path: 'order', element: <Order /> },
+      { path: 'order/detail', element: <OrderDetailPage /> },
     ],
   },
   {
     path: '/chat/:chatId',
     element: <ChatRoom />,
+  },
+  {
+    path: '/customize',
+    element: <CustomizeLayout />,
+    children: [
+      //   { index: true, element: <Customize /> },
+      //   { path: ':cakeId', element: <Customize /> },
+    ],
   },
   {
     path: '/auth',
@@ -45,6 +57,11 @@ const router = createBrowserRouter([
     path: '/orders',
     element: <BlankLayout />,
     children: [{ path: ':orderId', element: <OrderSheet /> }],
+  },
+  {
+    path: '/payment',
+    element: <BlankLayout />,
+    children: [{ index: true, element: <PaymentPage /> }],
   },
   {
     path: '/setting',

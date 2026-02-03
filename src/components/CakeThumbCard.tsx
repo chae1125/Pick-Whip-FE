@@ -1,6 +1,6 @@
 import { Heart } from 'lucide-react'
 
-type CakeThumCardProps = {
+type CakeCardProps = {
   imageUrl: string
   isLiked?: boolean
   onToggleLike?: () => void
@@ -11,7 +11,7 @@ type CakeThumCardProps = {
   likeIconInsetPx?: { bottom: number; right: number }
 }
 
-export default function CakeThumCard({
+export default function CakeCard({
   imageUrl,
   isLiked = false,
   onToggleLike,
@@ -20,7 +20,7 @@ export default function CakeThumCard({
   likeIconSizePx = 25,
   likeOffsetPx = { bottom: 56, right: 56 },
   likeIconInsetPx = { bottom: 60, right: 60 },
-}: CakeThumCardProps) {
+}: CakeCardProps) {
   return (
     <div className="group relative w-full overflow-hidden rounded-[10px] rounded-br-none bg-white p-1 shadow-md transition-transform hover:shadow-md">
       <div className="relative aspect-square w-full overflow-hidden rounded-[10px]">
