@@ -10,7 +10,7 @@ import IconThumbUp from '../../assets/reviewCard/icon-thumb-up.svg?react'
 import IconThumbUpFilled from '../../assets/reviewCard/icon-thumb-up-filled.svg?react'
 import IconMoreVertical from '../../assets/reviewCard/icon-more-vertical.svg?react'
 
-export function ReviewCard({ data }: { data: ReviewCardData }) {
+export function ReviewCard({ data, onOpen }: { data: ReviewCardData; onOpen?: () => void }) {
   const {
     menuName,
     optionLabel,
@@ -38,7 +38,18 @@ export function ReviewCard({ data }: { data: ReviewCardData }) {
   }
 
   return (
-    <article className="rounded-2xl bg-white p-7 shadow-card ring-1 ring-zinc-100 text-default">
+    <article
+      className="rounded-2xl bg-white p-7 shadow-card ring-1 ring-zinc-100 text-default cursor-pointer"
+      onClick={() => onOpen?.()}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpen?.()
+        }
+      }}
+    >
       <header className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5 text-[#0A0A0A]">
@@ -59,26 +70,40 @@ export function ReviewCard({ data }: { data: ReviewCardData }) {
             <RatingStars rating={rating} />
           </div>
         </div>
+
         <button
           type="button"
-          onClick={() => setIsActionSheetOpen(true)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setIsActionSheetOpen(true)
+          }}
           className="-mr-2 p-1 text-[#999999] rounded-full"
           aria-label="더보기"
         >
           <IconMoreVertical />
         </button>
       </header>
+
       <div className="mt-4 text-[15px] leading-relaxed text-review-default whitespace-pre-line">
         {content}
       </div>
-      <ReviewImages imageUrls={imageUrls} max={3} />
-      <ReviewTags tags={tags} extraTagCount={extraTagCount} />
-      {/* Helpful */}
+
+      <div onClick={(e) => e.stopPropagation()}>
+        <ReviewImages imageUrls={imageUrls} max={3} />
+      </div>
+
+      <div onClick={(e) => e.stopPropagation()}>
+        <ReviewTags tags={tags} extraTagCount={extraTagCount} />
+      </div>
+
       {typeof helpfulCount === 'number' ? (
         <div className="mt-6">
           <button
             type="button"
-            onClick={() => setIsHelpful(!isHelpful)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsHelpful(!isHelpful)
+            }}
             className={`inline-flex items-center gap-2 rounded-lg border px-2 py-1 transition-colors ${
               isHelpful ? 'border-[#4A5565] text-[#4A5565]' : 'border-[#bebebe] text-[#7D8590]'
             }`}
@@ -95,7 +120,9 @@ export function ReviewCard({ data }: { data: ReviewCardData }) {
         </div>
       ) : null}
 
-      <OwnerReply reply={ownerReply} />
+      <div onClick={(e) => e.stopPropagation()}>
+        <OwnerReply reply={ownerReply} />
+      </div>
 
       <ReviewActionSheet
         isOpen={isActionSheetOpen}

@@ -1,4 +1,4 @@
-import EventRedCard from '../EventRedCard'
+import EventRedCard from './EventRedCard'
 
 export type EventInfo = {
   title: string
