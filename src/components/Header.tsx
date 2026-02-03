@@ -23,6 +23,7 @@ export function Header() {
 
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [hasUnread /* setHasUnread */] = useState(true)
 
   const open = () => {
     setIsMounted(true)
@@ -70,8 +71,16 @@ export function Header() {
           >
             <MessageCircle size={25} />
           </button>
-          <button className="rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100" aria-label="알림">
+          <button
+            className="relative rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100"
+            aria-label="알림"
+            onClick={() => navigate('/notifications', { state: { cleared: true } })}
+          >
             <Bell size={25} />
+
+            {hasUnread && (
+              <span className="absolute -top-[0.5px] -right-[0.5px] h-1.5 w-1.5 rounded-full bg-[#E85C5C]" />
+            )}
           </button>
 
           <div className="h-8 w-8" aria-hidden="true" />
