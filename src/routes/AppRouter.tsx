@@ -22,6 +22,7 @@ import ShopDetailPage from '@/pages/ShopDetailPage'
 import DesignGalleryPage from '@/pages/DesignGalleryPage'
 import StoreInfoPage from '@/pages/StoreInfoPage'
 import ReviewPage from '@/pages/ReviewPage'
+import NotificationPage from '@/pages/NotificationPage'
 
 const router = createBrowserRouter([
   {
@@ -62,6 +63,11 @@ const router = createBrowserRouter([
     path: '/payment',
     element: <BlankLayout />,
     children: [{ index: true, element: <PaymentPage /> }],
+  },
+  {
+    path: '/notifications',
+    element: <BlankLayout />,
+    children: [{ index: true, element: <NotificationPage /> }],
   },
   {
     path: '/setting',

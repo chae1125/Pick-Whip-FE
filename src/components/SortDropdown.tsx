@@ -3,7 +3,6 @@ import { ChevronDownIcon } from 'lucide-react'
 
 const OPTIONS = [
   { label: '가나다순', value: 'abc' },
-  { label: '가격순', value: 'price' },
   { label: '가까운 순', value: 'distance' },
   { label: '평점순', value: 'rating' },
 ]
@@ -23,7 +22,7 @@ export default function SortDropdown({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-1.5 text-[#0A0A0A] shadow-sm hover:bg-gray-50 active:scale-[0.98] transition"
+        className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[#0A0A0A] hover:bg-gray-50 active:scale-[0.98] transition"
       >
         <span className="font-medium">{selected?.label ?? '정렬'}</span>
         <span className="text-[15px] text-[var(--color-sub-gray-100)]">
