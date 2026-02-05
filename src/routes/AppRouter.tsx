@@ -18,6 +18,7 @@ import OrderDetailPage from '@/pages/OrderDetailPage'
 import SettingsPage from '@/pages/SettingsPage'
 import EditMyInfoPage from '@/pages/EditMyInfoPage'
 import PaymentPage from '@/pages/payment/PaymentPage'
+import NotificationPage from '@/pages/NotificationPage'
 
 const router = createBrowserRouter([
   {
@@ -58,6 +59,11 @@ const router = createBrowserRouter([
     path: '/payment',
     element: <BlankLayout />,
     children: [{ index: true, element: <PaymentPage /> }],
+  },
+  {
+    path: '/notifications',
+    element: <BlankLayout />,
+    children: [{ index: true, element: <NotificationPage /> }],
   },
   {
     path: '/setting',
