@@ -1,5 +1,5 @@
 import type { CakeCardItem } from '@/types/designgallery'
-import CakeThumCard from '../../CakeThumbCard'
+import CakeThumCard from '../../home/CakeThumbCard'
 
 type Props = {
   item: CakeCardItem
