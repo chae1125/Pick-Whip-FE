@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 
 import AuthLayout from '@/layout/AuthLayout'
 import NotFound from '@/pages/NotFound'
@@ -18,6 +18,10 @@ import OrderDetailPage from '@/pages/OrderDetailPage'
 import SettingsPage from '@/pages/SettingsPage'
 import EditMyInfoPage from '@/pages/EditMyInfoPage'
 import PaymentPage from '@/pages/payment/PaymentPage'
+import ShopDetailPage from '@/pages/ShopDetailPage'
+import DesignGalleryPage from '@/pages/DesignGalleryPage'
+import StoreInfoPage from '@/pages/StoreInfoPage'
+import ReviewPage from '@/pages/ReviewPage'
 import NotificationPage from '@/pages/NotificationPage'
 
 const router = createBrowserRouter([
@@ -71,6 +75,21 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <SettingsPage /> },
       { path: 'edit-my-info', element: <EditMyInfoPage /> },
+    ],
+  },
+  {
+    path: '/store-detail',
+    element: <BlankLayout />,
+    children: [
+      {
+        element: <ShopDetailPage />,
+        children: [
+          { index: true, element: <Navigate to="design" replace /> },
+          { path: 'design', element: <DesignGalleryPage /> },
+          { path: 'info', element: <StoreInfoPage /> },
+          { path: 'review', element: <ReviewPage /> },
+        ],
+      },
     ],
   },
 ])

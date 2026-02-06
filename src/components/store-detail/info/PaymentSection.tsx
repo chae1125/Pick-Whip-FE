@@ -1,4 +1,4 @@
-import Chip from '../Chip'
+import Chip from './Chip'
 
 export type PaymentMethod = 'CARD' | 'BANK_TRANSFER' | 'NAVER_PAY' | 'KAKAO_PAY' | 'TOSS_PAY'
 
