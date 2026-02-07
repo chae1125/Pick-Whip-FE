@@ -23,6 +23,7 @@ export function Header() {
 
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [hasUnread /* setHasUnread */] = useState(true)
 
   const open = () => {
     setIsMounted(true)
@@ -70,8 +71,16 @@ export function Header() {
           >
             <MessageCircle size={25} />
           </button>
-          <button className="rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100" aria-label="알림">
+          <button
+            className="relative rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100"
+            aria-label="알림"
+            onClick={() => navigate('/notifications', { state: { cleared: true } })}
+          >
             <Bell size={25} />
+
+            {hasUnread && (
+              <span className="absolute -top-[0.5px] -right-[0.5px] h-1.5 w-1.5 rounded-full bg-[#E85C5C]" />
+            )}
           </button>
 
           <div className="h-8 w-8" aria-hidden="true" />
@@ -115,21 +124,30 @@ export function Header() {
                 title="임시저장 주문"
                 desc="작성 중인 주문서를 확인하세요"
                 badge={3}
-                onClick={close}
+                onClick={() => {
+                  close()
+                  navigate('/drafts')
+                }}
               />
               <DrawerItem
                 icon={<FileText size={18} />}
                 title="주문 요청 내역"
                 desc="작성한 주문서를 확인하세요"
                 badge={2}
-                onClick={close}
+                onClick={() => {
+                  close()
+                  navigate('/request-history')
+                }}
               />
               <DrawerItem
                 icon={<ShoppingBag size={18} />}
                 title="주문 완료 내역"
                 desc="결제 완료 후 제작 중인 주문 내역을 확인하세요"
                 badge={1}
-                onClick={close}
+                onClick={() => {
+                  close()
+                  navigate('/complete-history')
+                }}
               />
               <DrawerItem icon={<Star size={18} />} title="내 리뷰" onClick={close} />
             </ul>

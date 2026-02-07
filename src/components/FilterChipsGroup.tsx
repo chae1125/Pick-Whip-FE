@@ -1,6 +1,7 @@
 type ChipOption = {
   value: string
   label: string
+  disabled?: boolean
 }
 
 interface FilterChipsGroupProps {
@@ -8,11 +9,28 @@ interface FilterChipsGroupProps {
   options: ChipOption[]
   value: string[]
   onChange: (next: string[]) => void
+  multiple?: boolean
 }
 
-export function FilterChipsGroup({ title, options, value, onChange }: FilterChipsGroupProps) {
-  const toggle = (v: string) => {
+export function FilterChipsGroup({
+  title,
+  options,
+  value,
+  onChange,
+  multiple = true,
+}: FilterChipsGroupProps) {
+  const toggle = (opt: ChipOption) => {
+    if (opt.disabled) return
+
+    const v = opt.value
     const has = value.includes(v)
+
+    if (!multiple) {
+      const next = has ? [] : [v]
+      onChange(next)
+      return
+    }
+
     const next = has ? value.filter((x) => x !== v) : [...value, v]
     onChange(next)
   }
@@ -27,7 +45,8 @@ export function FilterChipsGroup({ title, options, value, onChange }: FilterChip
             key={opt.value}
             label={opt.label}
             selected={value.includes(opt.value)}
-            onClick={() => toggle(opt.value)}
+            disabled={opt.disabled}
+            onClick={() => toggle(opt)}
           />
         ))}
       </div>
@@ -40,21 +59,26 @@ export default FilterChipsGroup
 function FilterChip({
   label,
   selected,
+  disabled,
   onClick,
 }: {
   label: string
   selected: boolean
+  disabled?: boolean
   onClick: () => void
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={`rounded-full !border px-4 py-1.5 text-center text-[16px] font-semibold whitespace-nowrap transition-colors duration-150
         ${
-          selected
-            ? '!border-[var(--color-sub-brown-200)] bg-[var(--color-sub-brown-100)]/40 text-[#8E0B0A]'
-            : '!border-[#E5E7EB] bg-white text-[#364153]'
+          disabled
+            ? '!border-transparent bg-[#F1F2F4] text-[#C9CED6] cursor-not-allowed'
+            : selected
+              ? '!border-[var(--color-sub-brown-200)] bg-[var(--color-sub-brown-100)]/40 text-[#8E0B0A]'
+              : '!border-[#E5E7EB] bg-white text-[#364153] hover:bg-black/5 active:scale-[0.99]'
         }
       `}
     >
