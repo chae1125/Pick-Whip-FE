@@ -90,18 +90,18 @@ export default function PickUpCalendar({
   }
 
   return (
-    <div className="mx-auto w-fit rounded-xl border border-[#EAEAEA] bg-white p-3">
-      <div className="relative flex items-center justify-center pb-2">
+    <div className="mx-auto w-full rounded-xl bg-white p-3">
+      <div className="relative mx-auto flex w-fit items-center justify-center pb-5 px-20">
         <button
           type="button"
           onClick={goPrev}
           className="absolute left-0 grid w-7 aspect-square place-items-center rounded-lg border border-[#EFEFEF] bg-white"
           aria-label="이전 달"
         >
-          <span className="text-[16px] leading-none text-[#6B7280]">{'‹'}</span>
+          <span className="text-[18px] leading-none text-[#6B7280]">{'‹'}</span>
         </button>
 
-        <div className="text-[13px] font-regular text-[#0A0A0A]">
+        <div className="text-[16px] font-regular text-[#0A0A0A] whitespace-nowrap">
           {viewMonth + 1}월 {viewYear}
         </div>
 
@@ -111,49 +111,51 @@ export default function PickUpCalendar({
           className="absolute right-0 grid w-7 aspect-square place-items-center rounded-lg border border-[#EFEFEF] bg-white"
           aria-label="다음 달"
         >
-          <span className="text-[16px] leading-none text-[#6B7280]">{'›'}</span>
+          <span className="text-[18px] leading-none text-[#6B7280]">{'›'}</span>
         </button>
       </div>
 
-      <div className=" grid grid-cols-7 text-center text-[10px] font-regular text-[#8B90A0]">
-        {dow.map((d) => (
-          <div key={d} className="py-1.5">
-            {d}
-          </div>
-        ))}
-      </div>
+      <div className="border border-[#EAEAEA] rounded-lg w-full">
+        <div className="mx-auto grid w-fit grid-cols-7 text-center text-[12px] font-regular text-[#8B90A0]">
+          {dow.map((d) => (
+            <div key={d} className="mx-auto grid w-9 aspect-square place-items-center rounded-lg">
+              {d}
+            </div>
+          ))}
+        </div>
 
-      <div className="mx-auto w-fit grid grid-cols-7 gap-y-2">
-        {cells.map((cell, idx) => {
-          const d = startOfDay(cell.date)
-          const disabled = disablePast && d.getTime() < min.getTime()
-          const selected = value ? isSameDay(d, value) : false
+        <div className="mx-auto grid w-fit grid-cols-7 gap-y-2 pb-2">
+          {cells.map((cell, idx) => {
+            const d = startOfDay(cell.date)
+            const disabled = disablePast && d.getTime() < min.getTime()
+            const selected = value ? isSameDay(d, value) : false
 
-          let textColor = '#0A0A0A'
-          if (!cell.inMonth) textColor = '#8B90A0'
-          if (disabled) textColor = '#C9CED6'
+            let textColor = '#0A0A0A'
+            if (!cell.inMonth) textColor = '#8B90A0'
+            if (disabled) textColor = '#C9CED6'
 
-          return (
-            <button
-              key={`${cell.date.toISOString()}-${idx}`}
-              type="button"
-              onClick={() => pick(d)}
-              disabled={disabled}
-              className={[
-                'mx-auto grid w-9 aspect-square place-items-center rounded-lg !text-[13px] transition',
-                disabled && 'cursor-not-allowed',
-                !disabled && !selected && 'hover:bg-black/5 active:scale-95',
-                selected && 'bg-[#F6DCE6]',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              style={{ color: textColor }}
-              aria-pressed={selected}
-            >
-              {cell.date.getDate()}
-            </button>
-          )
-        })}
+            return (
+              <button
+                key={`${cell.date.toISOString()}-${idx}`}
+                type="button"
+                onClick={() => pick(d)}
+                disabled={disabled}
+                className={[
+                  'mx-auto grid w-9 aspect-square place-items-center rounded-lg !text-[14px] transition',
+                  disabled && 'cursor-not-allowed',
+                  !disabled && !selected && 'hover:bg-black/5 active:scale-95',
+                  selected && 'bg-[var(--color-main-pink-30)]',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                style={{ color: textColor }}
+                aria-pressed={selected}
+              >
+                {cell.date.getDate()}
+              </button>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
