@@ -124,21 +124,30 @@ export function Header() {
                 title="임시저장 주문"
                 desc="작성 중인 주문서를 확인하세요"
                 badge={3}
-                onClick={close}
+                onClick={() => {
+                  close()
+                  navigate('/drafts')
+                }}
               />
               <DrawerItem
                 icon={<FileText size={18} />}
                 title="주문 요청 내역"
                 desc="작성한 주문서를 확인하세요"
                 badge={2}
-                onClick={close}
+                onClick={() => {
+                  close()
+                  navigate('/request-history')
+                }}
               />
               <DrawerItem
                 icon={<ShoppingBag size={18} />}
                 title="주문 완료 내역"
                 desc="결제 완료 후 제작 중인 주문 내역을 확인하세요"
                 badge={1}
-                onClick={close}
+                onClick={() => {
+                  close()
+                  navigate('/complete-history')
+                }}
               />
               <DrawerItem icon={<Star size={18} />} title="내 리뷰" onClick={close} />
             </ul>

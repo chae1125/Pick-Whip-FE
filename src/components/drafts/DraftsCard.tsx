@@ -1,3 +1,6 @@
+import DraftsProgressBar, { type ProgressStep } from './DraftsProgressBar'
+import { Trash2 } from 'lucide-react'
+
 export type Drafts = {
   imageURL: string
   title: string
@@ -6,7 +9,7 @@ export type Drafts = {
   design: string
   lastSave: string
   progressLabel: string
-  progress: number
+  progress: ProgressStep
 }
 
 export default function DraftsCard({
@@ -20,7 +23,7 @@ export default function DraftsCard({
 }) {
   return (
     <div className="pt-4 pb-4 ">
-      <div className="w-full h-[335px] rounded-[12px] bg-white pt-4 px-4 py-4">
+      <div className="w-full rounded-[12px] bg-white pt-4 px-4 py-4">
         {/* 썸네일 + 제목 */}
         <div className="flex items-start gap-6">
           <div className="h-[70px] overflow-hidden">
@@ -71,22 +74,9 @@ export default function DraftsCard({
           </div>
         </div>
 
-        {/* 진행 상태 */}
-        <div className="mt-6 flex items-center justify-between">
-          <p className="!text-[12px] !font-normal !text-[var(--color-main-red-200)]">
-            {draft.progressLabel}
-          </p>
-          <p className="!text-[12px] !font-normal !text-[var(--color-main-red-200)]">
-            {draft.progress}%
-          </p>
-        </div>
-
         {/* 진행도 */}
-        <div className="mt-1 h-[9px] w-full overflow-hidden rounded-full bg-[var(--color-main-pink-30)]">
-          <div
-            className="h-full rounded-full bg-[var(--color-main-red-200)]"
-            style={{ width: `${draft.progress}%` }}
-          />
+        <div className="mt-8">
+          <DraftsProgressBar progressLabel={draft.progressLabel} progress={draft.progress} />
         </div>
 
         {/* 하단 버튼 */}
@@ -114,30 +104,7 @@ export default function DraftsCard({
                 "
             aria-label="delete draft"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M9 3h6l1 2h4v2H4V5h4l1-2Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M6.5 9.5V20a1.5 1.5 0 0 0 1.5 1.5h8A1.5 1.5 0 0 0 17.5 20V9.5"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path d="M10 11.5V18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M14 11.5V18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
+            <Trash2 size={18} strokeWidth={1.8} />
           </button>
         </div>
       </div>

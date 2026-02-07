@@ -23,6 +23,9 @@ import DesignGalleryPage from '@/pages/DesignGalleryPage'
 import StoreInfoPage from '@/pages/StoreInfoPage'
 import ReviewPage from '@/pages/ReviewPage'
 import NotificationPage from '@/pages/NotificationPage'
+import DraftsOrderPage from '@/pages/DraftsOrderPage'
+import OrderRequestListPage from '@/pages/OrderRequestListPage'
+import OrderCompleteListPage from '@/pages/OrderCompleteListPage'
 
 const router = createBrowserRouter([
   {
@@ -76,6 +79,21 @@ const router = createBrowserRouter([
       { index: true, element: <SettingsPage /> },
       { path: 'edit-my-info', element: <EditMyInfoPage /> },
     ],
+  },
+  {
+    path: '/drafts',
+    element: <BlankLayout />,
+    children: [{ index: true, element: <DraftsOrderPage /> }],
+  },
+  {
+    path: '/request-history',
+    element: <BlankLayout />,
+    children: [{ index: true, element: <OrderRequestListPage /> }],
+  },
+  {
+    path: '/complete-history',
+    element: <BlankLayout />,
+    children: [{ index: true, element: <OrderCompleteListPage /> }],
   },
   {
     path: '/store-detail',
