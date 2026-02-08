@@ -1,7 +1,4 @@
-type FilterTab = {
-  key: string
-  label: string
-}
+import type { FilterTab } from '@/types/filter'
 
 interface FilterNavbarProps {
   items: FilterTab[]

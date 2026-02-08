@@ -1,11 +1,7 @@
-type ChipOption = {
-  value: string
-  label: string
-  disabled?: boolean
-}
+import type { ChipOption } from '../types/filter'
 
 interface FilterChipsGroupProps {
-  title: string
+  title: string | React.ReactNode
   options: ChipOption[]
   value: string[]
   onChange: (next: string[]) => void
