@@ -86,7 +86,7 @@ export function BottomSheet({ isOpen, title, description, onClose, children }: B
             <div className="pt-4 px-6">
               <div className="mx-auto mb-3 h-1.5 w-20 rounded-full bg-gray-300" onClick={onClose} />
 
-              <div className="text-black mb-10">
+              <div className="text-black mb-5">
                 <h2 className="text-center font-semibold">{title}</h2>
                 <p>{description}</p>
               </div>
