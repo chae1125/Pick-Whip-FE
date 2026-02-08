@@ -30,6 +30,7 @@ export type OrderInfo = {
   onClickOwnerMessage?: () => void
   onClickRetryPayment?: () => void
   onClickWriteReview?: () => void
+  onClickDetail?: () => void
 }
 
 function chipTextFromProgress(progress: ProgressStep) {
@@ -48,12 +49,12 @@ export default function OrderListCard({
   item,
   className,
   onClickPreview,
-  onClickMessage,
+  simpleView,
 }: {
   item: OrderInfo
   className?: string
   onClickPreview?: () => void
-  onClickMessage?: () => void
+  simpleView?: boolean
 }) {
   const [open, setOpen] = useState(false)
 
@@ -65,10 +66,14 @@ export default function OrderListCard({
         <OrderListCardMeta
           item={item}
           chip={<StatusChip progress={item.progress} chipText={chipText} />}
-          onClickMessage={onClickMessage}
         />
 
-        <OrderListCardExpanded open={open} item={item} onClickPreview={onClickPreview} />
+        <OrderListCardExpanded
+          open={open}
+          item={item}
+          onClickPreview={onClickPreview}
+          showDetailButton={simpleView}
+        />
 
         <div className="mt-4 flex justify-center">
           <button
@@ -87,16 +92,20 @@ export default function OrderListCard({
           </button>
         </div>
 
-        <OrderProgressSection progressLabel={item.progressLabel} progress={item.progress} />
+        {!simpleView && (
+          <>
+            <OrderProgressSection progressLabel={item.progressLabel} progress={item.progress} />
 
-        <UnavailableActions
-          progressLabel={item.progressLabel}
-          progress={item.progress}
-          onClickOwnerMessage={item.onClickOwnerMessage}
-          onClickRetryPayment={item.onClickRetryPayment}
-        />
+            <UnavailableActions
+              progressLabel={item.progressLabel}
+              progress={item.progress}
+              onClickOwnerMessage={item.onClickOwnerMessage}
+              onClickRetryPayment={item.onClickRetryPayment}
+            />
 
-        <OrderReviewCta progress={item.progress} onClickReview={item.onClickWriteReview} />
+            <OrderReviewCta progress={item.progress} onClickReview={item.onClickWriteReview} />
+          </>
+        )}
       </div>
     </div>
   )
