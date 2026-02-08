@@ -10,7 +10,7 @@ export function FilterBottomActions({
   applyDisabled = false,
 }: FilterBottomActionsProps) {
   return (
-    <div className="w-full border-t border-[#E5E7EB] bg-white py-4">
+    <div className="w-full border-t border-[#E5E7EB] bg-white pt-4">
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
