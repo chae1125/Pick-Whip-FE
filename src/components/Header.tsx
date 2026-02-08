@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { HamburgerButton } from './HamburgerButton'
 import { useNavigate } from 'react-router-dom'
+import { getMe } from '@/apis/user'
 
 export function Header() {
   const navigate = useNavigate()
@@ -24,6 +25,11 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [hasUnread /* setHasUnread */] = useState(true)
+  const [me, setMe] = useState<null | {
+    nickname: string
+    email: string
+    profileImageUrl: string | null
+  }>(null)
 
   const open = () => {
     setIsMounted(true)
@@ -50,6 +56,23 @@ export function Header() {
       document.body.style.overflow = prev
     }
   }, [isMounted])
+
+  useEffect(() => {
+    if (!isMounted) return
+    if (me) return
+
+    getMe(1)
+      .then((data) => {
+        setMe({
+          nickname: data.nickname,
+          email: data.email,
+          profileImageUrl: data.profileImageUrl,
+        })
+      })
+      .catch((e) => {
+        console.error('내 정보 조회 실패', e)
+      })
+  }, [isMounted, me])
 
   return (
     <>
@@ -106,8 +129,8 @@ export function Header() {
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-gray-200" />
                 <div>
-                  <p className="!text-[14px] !text-white">코코아232</p>
-                  <p className="!text-[12.5px] !text-white/70">cake_lover@kakao.com</p>
+                  <p className="!text-[14px] !text-white">{me?.nickname ?? '...'}</p>
+                  <p className="!text-[12.5px] !text-white/70">{me?.email ?? ''}</p>
                 </div>
               </div>
             </div>

@@ -1,6 +1,8 @@
 import { motion, type Variants } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import logo from '@/assets/logo/logo2.svg'
 import kakao from '@/assets/logo/kakao.svg'
+import { getTestToken } from '@/apis/auth'
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -25,6 +27,24 @@ const itemVariants: Variants = {
 }
 
 export default function Login() {
+  const navigate = useNavigate()
+
+  const handleTestLogin = async () => {
+    try {
+      const data = await getTestToken(1)
+
+      if (!data.isSuccess || !data.result) {
+        throw new Error(data.message ?? '토큰 발급 실패')
+      }
+
+      localStorage.setItem('accessToken', data.result)
+      navigate('/')
+    } catch (e) {
+      console.error(e)
+      alert('로그인에 실패했습니다.')
+    }
+  }
+
   return (
     <motion.div
       className="min-h-screen w-full bg-[linear-gradient(0deg,#F7E6E6_-3.26%,rgba(251,156,174,0.8)_111.22%)] flex flex-col items-center justify-center"
@@ -44,6 +64,7 @@ export default function Login() {
         variants={itemVariants}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
+        onClick={handleTestLogin}
         className="flex w-full max-w-sm h-12.25 items-center justify-center mt-12 pr-[0.01px] bg-[#FEE500] rounded-[12.75px] shadow-md transition-colors gap-8"
       >
         <img src={kakao} alt="카카오 로고" className="w-5 h-5" />
