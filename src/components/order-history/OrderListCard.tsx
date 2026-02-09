@@ -50,11 +50,13 @@ export default function OrderListCard({
   className,
   onClickPreview,
   simpleView,
+  showMessageButton,
 }: {
   item: OrderInfo
   className?: string
   onClickPreview?: () => void
   simpleView?: boolean
+  showMessageButton?: boolean
 }) {
   const [open, setOpen] = useState(false)
 
@@ -66,6 +68,7 @@ export default function OrderListCard({
         <OrderListCardMeta
           item={item}
           chip={<StatusChip progress={item.progress} chipText={chipText} />}
+          showMessageButton={showMessageButton}
         />
 
         <OrderListCardExpanded
