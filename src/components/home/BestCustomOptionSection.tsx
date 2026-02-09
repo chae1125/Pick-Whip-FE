@@ -1,149 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import BestReviewCard from './BestReveiwCard'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-
-type BestOptionItem = {
-  writerName: string
-  createdDate: string
-  rating: number
-  helpfulCount: number
-  content: string
-  keywords: string[]
-  cakeImageUrl: string
-  options: {
-    designName: string
-    taste: string
-    deco: string
-    additionalRequest: string | null
-    colors: {
-      icingColor: string | null
-      sheetColor: string | null
-      creamColor: string | null
-    }
-  }
-}
-
-type BestOptionsResponse = {
-  isSuccess: boolean
-  code: string
-  message: string
-  result?: {
-    items?: BestOptionItem[]
-  }
-  success?: boolean
-}
-
-const dummyBestOptionsResponse: BestOptionsResponse = {
-  isSuccess: true,
-  code: 'COMMON200',
-  message: '성공입니다.',
-  result: {
-    items: [
-      {
-        writerName: '민지',
-        createdDate: '2026.01.15',
-        rating: 5,
-        helpfulCount: 128,
-        content:
-          '색감 조합이 정말 예뻤고 요청사항도 정확하게 반영해주셨어요. 사진이랑 실물이 거의 똑같았습니다!',
-        keywords: ['색감이 예뻐요', '사진이랑 똑같아요'],
-        cakeImageUrl: 'https://loremflickr.com/400/500/cake?lock=11',
-        options: {
-          designName: '2호 하트',
-          taste: '바닐라 시트 + 우유 크림',
-          deco: '과일 데코',
-          additionalRequest: '하트 레터링 강조',
-          colors: {
-            icingColor: '#FFD6E8',
-            sheetColor: '#F5B7B1',
-            creamColor: '#FFF5F5',
-          },
-        },
-      },
-      {
-        writerName: '케이크러버',
-        createdDate: '2026.01.28',
-        rating: 4,
-        helpfulCount: 86,
-        content: '전체적으로 만족스러웠어요! 다만 크림이 살짝 달긴 했지만 디자인은 최고였습니다.',
-        keywords: ['디자인 만족', '포장 깔끔'],
-        cakeImageUrl: 'https://loremflickr.com/400/500/cake?lock=12',
-        options: {
-          designName: '1호 원형',
-          taste: '초코 시트 + 마스카포네',
-          deco: '초콜릿 조각',
-          additionalRequest: null,
-          colors: {
-            icingColor: '#E3F2FD',
-            sheetColor: '#6D4C41',
-            creamColor: '#FFFFFF',
-          },
-        },
-      },
-      {
-        writerName: '소연',
-        createdDate: '2026.02.01',
-        rating: 5,
-        helpfulCount: 42,
-        content: '기념일용으로 주문했는데 받는 사람이 정말 좋아했어요. 다음에도 여기서 주문할게요!',
-        keywords: ['기념일 추천'],
-        cakeImageUrl: 'https://loremflickr.com/400/500/cake?lock=13',
-        options: {
-          designName: '미니 1호',
-          taste: '레몬 시트 + 요거트 크림',
-          deco: '플라워 토핑',
-          additionalRequest: '노란색 포인트',
-          colors: {
-            icingColor: '#FFF9C4',
-            sheetColor: '#F0E68C',
-            creamColor: '#FFFFFF',
-          },
-        },
-      },
-      {
-        writerName: '디저트덕후',
-        createdDate: '2026.02.03',
-        rating: 3,
-        helpfulCount: 21,
-        content: '디자인은 마음에 들었는데 배송 시간이 조금 아쉬웠어요. 그래도 맛은 괜찮았습니다.',
-        keywords: ['맛있어요'],
-        cakeImageUrl: 'https://loremflickr.com/400/500/cake?lock=14',
-        options: {
-          designName: '2단 케이크',
-          taste: '녹차 시트 + 생크림',
-          deco: '말차 파우더',
-          additionalRequest: null,
-          colors: {
-            icingColor: '#E8F5E9',
-            sheetColor: '#81C784',
-            creamColor: '#F1F8E9',
-          },
-        },
-      },
-      {
-        writerName: '하늘',
-        createdDate: '2026.02.05',
-        rating: 4,
-        helpfulCount: 9,
-        content: '무난하고 깔끔한 디자인이라 부모님 생신 케이크로 좋았어요.',
-        keywords: ['부모님 생신', '깔끔한 디자인'],
-        cakeImageUrl: 'https://loremflickr.com/400/500/cake?lock=15',
-        options: {
-          designName: '3호 원형',
-          taste: '고구마 무스',
-          deco: '견과류',
-          additionalRequest: '문구 작게',
-          colors: {
-            icingColor: '#F3E5AB',
-            sheetColor: '#D7B899',
-            creamColor: '#FFFFFF',
-          },
-        },
-      },
-    ],
-  },
-  success: true,
-}
+import { getBestReviews } from '@/apis/review'
+import type { BestOptionItem } from '@/apis/review'
 
 function PillLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -159,15 +18,43 @@ function ColorSwatch({ color }: { color: string | null | undefined }) {
 }
 
 export default function BestCustomOptionSection() {
-  const items = useMemo(() => {
-    const raw = dummyBestOptionsResponse?.result?.items ?? []
-    return raw.slice(0, 5)
-  }, [])
+  const [data, setData] = useState<BestOptionItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const [idx, setIdx] = useState(0)
   const [errorByUrl, setErrorByUrl] = useState<Record<string, boolean>>({})
 
+  useEffect(() => {
+    const fetchBest = async () => {
+      setLoading(true)
+      setErrorMsg(null)
+
+      try {
+        const items = await getBestReviews()
+        setData(items.slice(0, 5))
+      } catch (e) {
+        setErrorMsg(e instanceof Error ? e.message : '알 수 없는 오류가 발생했습니다.')
+        setData([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBest()
+  }, [])
+
+  useEffect(() => {
+    if (!data.length) return
+    setIdx((prev) => Math.min(prev, data.length - 1))
+  }, [data.length])
+
+  const items = data
+
+  if (loading) return null
+  if (errorMsg) return null
   if (!items.length) return null
+
   const current = items[idx]
   const imgUrl = current?.cakeImageUrl ?? ''
   const isImgError = !!(imgUrl && errorByUrl[imgUrl])
