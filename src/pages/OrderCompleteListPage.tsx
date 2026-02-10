@@ -16,9 +16,14 @@ export default function OrderCompleteListPage() {
         {mockOrderComplete.map((item, idx) => (
           <OrderListCard
             key={`${item.storeName}-${idx}`}
-            item={item}
+            item={{
+              ...item,
+              onClickOwnerMessage: () => {
+                console.log('Chat clicked for:', item.storeName)
+              },
+            }}
             onClickPreview={() => {}}
-            onClickMessage={() => {}}
+            showMessageButton={true}
           />
         ))}
       </div>

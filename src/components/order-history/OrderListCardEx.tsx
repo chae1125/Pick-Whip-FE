@@ -5,10 +5,12 @@ export default function OrderListCardEx({
   open,
   item,
   onClickPreview,
+  showDetailButton,
 }: {
   open: boolean
   item: OrderInfo
   onClickPreview?: () => void
+  showDetailButton?: boolean
 }) {
   return (
     <AnimatePresence initial={false}>
@@ -47,6 +49,18 @@ export default function OrderListCardEx({
               <KeyValueRow label="확정 금액" value={item.detail?.finalPriceText ?? '-'} />
               <KeyValueRow label="주문 코드" value={item.detail?.orderCode ?? '-'} />
             </div>
+
+            {showDetailButton && (
+              <div className="mt-4 pr-5">
+                <button
+                  type="button"
+                  onClick={item.onClickDetail}
+                  className="w-full rounded-lg bg-[#57504F] py-3 text-[13px] font-medium text-white transition-colors hover:bg-[#453f3e]"
+                >
+                  주문서 상세보기
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
       ) : null}
