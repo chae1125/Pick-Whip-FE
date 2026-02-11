@@ -1,8 +1,9 @@
-import { useState } from 'react'
 import Anniversary from '../assets/img/anniversary.png'
 import Birthday from '../assets/img/birthday.png'
 import Christmas from '../assets/img/christmas.png'
 import Graduation from '../assets/img/graduation.png'
+
+export type CategoryValue = '전체' | '생일' | '기념일' | '크리스마스' | '졸업'
 
 type Category = {
   id: string
@@ -11,28 +12,36 @@ type Category = {
 }
 
 const DEFAULT: Category[] = [
-  { id: 'all', label: '전체', icon: 'ALL' },
-  { id: 'birthday', label: '생일', icon: Birthday },
-  { id: 'anniv', label: '기념일', icon: Anniversary },
-  { id: 'christmas', label: '크리스마스', icon: Christmas },
-  { id: 'graduation', label: '졸업', icon: Graduation },
+  { id: '전체', label: '전체', icon: 'ALL' },
+  { id: '생일', label: '생일', icon: Birthday },
+  { id: '기념일', label: '기념일', icon: Anniversary },
+  { id: '크리스마스', label: '크리스마스', icon: Christmas },
+  { id: '졸업', label: '졸업', icon: Graduation },
 ]
 
-export default function CategoryChips({ items }: { items?: Category[] }) {
+export default function CategoryChips({
+  items,
+  value,
+  onChange,
+}: {
+  items?: Category[]
+  value?: CategoryValue
+  onChange?: (value: CategoryValue) => void
+}) {
   const cats = items ?? DEFAULT
-  const [selected, setSelected] = useState<string>('all')
 
   return (
     <div className="mx-auto max-w-lg mt-6">
       <div className="grid grid-cols-5 gap-y-6 gap-x-4">
         {cats.map((c) => {
-          const active = c.id === selected
+          const active = c.id === value
           return (
             <button
               key={c.id}
-              onClick={() => setSelected(c.id)}
+              onClick={() => onChange?.(c.id as CategoryValue)}
               className="flex flex-col items-center justify-start bg-transparent"
               aria-pressed={active}
+              type="button"
             >
               <div
                 className={`flex items-center justify-center h-12 w-12 rounded-full transition-colors duration-150 ${
