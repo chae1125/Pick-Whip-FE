@@ -1,4 +1,7 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
 
 import AuthLayout from '@/layout/AuthLayout'
 import NotFound from '@/pages/NotFound'
@@ -7,11 +10,10 @@ import Map from '@/pages/Map'
 import Login from '@/pages/auth/Login'
 import MainLayout from '@/layout/MainLayout'
 import CustomizeLayout from '@/layout/CustomizeLayout'
-
 import Order from '@/pages/Order'
 import OrderSheet from '@/pages/OrderSheet'
 import BlankLayout from '@/layout/BlankLayout'
-// import Customize from '@/pages/customize/Customize'
+import Customize from '@/pages/customize/Customize'
 import ChatList from '@/pages/chat/ChatList'
 import ChatRoom from '@/pages/chat/ChatRoom'
 import OrderDetailPage from '@/pages/OrderDetailPage'
@@ -48,8 +50,8 @@ const router = createBrowserRouter([
     path: '/customize',
     element: <CustomizeLayout />,
     children: [
-      //   { index: true, element: <Customize /> },
-      //   { path: ':cakeId', element: <Customize /> },
+      { index: true, element: <Customize /> },
+      { path: ':cakeId', element: <Customize /> },
     ],
   },
   {
@@ -113,5 +115,9 @@ const router = createBrowserRouter([
 ])
 
 export default function AppRouter() {
-  return <RouterProvider router={router} />
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  )
 }
