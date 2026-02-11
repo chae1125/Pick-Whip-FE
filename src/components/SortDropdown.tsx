@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { ChevronDownIcon } from 'lucide-react'
+import type { DesignSort } from '@/apis/home'
 
-const OPTIONS = [
-  { label: '가나다순', value: 'abc' },
-  { label: '가까운 순', value: 'distance' },
-  { label: '평점순', value: 'rating' },
+const OPTIONS: Array<{ label: string; value: DesignSort }> = [
+  { label: '가나다순', value: 'NAME' },
+  { label: '가까운 순', value: 'NEARBY' },
+  { label: '평점순', value: 'RATING' },
 ]
 
 export default function SortDropdown({
   value,
   onChange,
 }: {
-  value: string
-  onChange: (v: string) => void
+  value: DesignSort
+  onChange: (v: DesignSort) => void
 }) {
   const [open, setOpen] = useState(false)
   const selected = OPTIONS.find((o) => o.value === value)
