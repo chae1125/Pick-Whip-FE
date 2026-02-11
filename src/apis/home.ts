@@ -50,3 +50,26 @@ export const getDesignGallery = async (params: GetDesignGalleryParams) => {
     isLast: !!result?.isLast,
   }
 }
+
+export interface TopFiveCakeResponse {
+  rank: number
+  designId: number
+  cakeName: string
+  cakeImageUrl: string
+  shopId: number
+  shopName: string
+  averageRating: number
+  minPrice: number
+  orderCount: number
+  myPick: boolean
+}
+
+export const getTopFiveCakes = async (userId: number) => {
+  const res = await instance.get<{ result: TopFiveCakeResponse[] }>(
+    '/api/home/popular-cakes/top5',
+    {
+      params: { userId },
+    },
+  )
+  return res.data.result
+}
