@@ -30,6 +30,10 @@ export default function TopFiveSection() {
     fetchData()
   }, [])
 
+  if (items.length === 0) {
+    return null
+  }
+
   return (
     <section className="mt-6">
       <div className="mx-auto max-w-lg bg-[#F7DEDD] rounded-sm py-5 px-6 text-center relative">
