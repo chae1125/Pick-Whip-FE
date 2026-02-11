@@ -15,6 +15,8 @@ import PromoCopy from '@/components/home/PromoCopy'
 import BestCustomOptionSection from '@/components/home/BestCustomOptionSection'
 
 import PromoBanner from '../assets/img/promoBanner.png'
+import PromoBanner2 from '../assets/img/promoBanner2.png'
+import PromoBanner3 from '../assets/img/promoBanner3.png'
 
 const PROMO_ITEMS = [
   {
@@ -23,12 +25,12 @@ const PROMO_ITEMS = [
     subtitle: '따뜻한 연말, 특별한 케이크와 함께',
   },
   {
-    image: PromoBanner,
+    image: PromoBanner2,
     title: '기념일 스페셜',
     subtitle: '소중한 날, 특별한 케이크로 함께하세요',
   },
   {
-    image: PromoBanner,
+    image: PromoBanner3,
     title: '홈파티 추천',
     subtitle: '간편하고 예쁜 파티용 케이크 모음',
   },
