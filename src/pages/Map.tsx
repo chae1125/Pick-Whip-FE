@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { MapInput } from '../components/input/MapInput'
 import { BottomSheet } from '../components/BottomSheet'
 import KakaoMap from '../components/map/KakaoMap'
@@ -17,8 +17,16 @@ import {
   INITIAL_PRICE,
   INITIAL_DATE,
 } from '@/constants/filter'
-
+import { getShopsInMap } from '@/apis/map'
+import type { MapBounds, MapShop } from '@/apis/map'
 export default function Map() {
+  const [shops, setShops] = useState<MapShop[]>([])
+
+  const handleBoundsChange = useCallback(async (bounds: MapBounds) => {
+    const data = await getShopsInMap(bounds)
+    if (data.isSuccess) setShops(data.result?.shops ?? [])
+  }, [])
+
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
   const [activeKey, setActivekey] = useState<string>(FILTER_TABS[0].key)
@@ -105,7 +113,7 @@ export default function Map() {
       </div>
 
       <div className="w-full h-full border-none">
-        <KakaoMap />
+        <KakaoMap onBoundsChange={handleBoundsChange} shops={shops} />
       </div>
 
       <BottomSheet isOpen={isFilterOpen} title="필터" onClose={() => setIsFilterOpen(false)}>
