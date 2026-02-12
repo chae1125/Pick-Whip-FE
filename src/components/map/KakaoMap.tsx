@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from 'react'
+import myPickPinIcon from '../../assets/img/myPickPin.svg'
 
 interface MapProps {
   onBoundsChange?: (bounds: {
@@ -9,19 +10,21 @@ interface MapProps {
     highLon: number
   }) => void
   shops?: any[]
+  isMyPick?: boolean
 }
 
-export default function KakaoMap({ onBoundsChange, shops = [] }: MapProps) {
+export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapInstance, setMapInstance] = useState<any>(null)
 
   const shopMarkersRef = useRef<any[]>([])
+  const myLocationMarkerRef = useRef<any>(null)
 
-  const [isLoading, setIsLoading] = useState(true)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number }>({
     lat: 37.5665,
     lng: 126.978,
   })
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -34,10 +37,10 @@ export default function KakaoMap({ onBoundsChange, shops = [] }: MapProps) {
           setIsLoading(false)
         },
         (error) => {
-          console.error('위치 정보를 가져오는데 실패했습니다.', error)
+          console.warn('위치 파악 실패(기본 위치 사용):', error)
           setIsLoading(false)
         },
-        { enableHighAccuracy: true, timeout: 10000 },
+        { enableHighAccuracy: false, timeout: 5000 },
       )
     } else {
       setTimeout(() => setIsLoading(false), 0)
@@ -70,12 +73,13 @@ export default function KakaoMap({ onBoundsChange, shops = [] }: MapProps) {
           "></div>
         </div>
       `
-      const myLocationOverlay = new kakao.maps.CustomOverlay({
+      const myOverlay = new kakao.maps.CustomOverlay({
         position: myPosition,
         content: myLocationContent,
         zIndex: 1,
       })
-      myLocationOverlay.setMap(map)
+      myOverlay.setMap(map)
+      myLocationMarkerRef.current = myOverlay
 
       const triggerBoundsChange = () => {
         const bounds = map.getBounds()
@@ -91,7 +95,6 @@ export default function KakaoMap({ onBoundsChange, shops = [] }: MapProps) {
       }
 
       triggerBoundsChange()
-
       kakao.maps.event.addListener(map, 'idle', triggerBoundsChange)
     })
   }, [isLoading, myLocation, onBoundsChange])
@@ -106,28 +109,79 @@ export default function KakaoMap({ onBoundsChange, shops = [] }: MapProps) {
     shops.forEach((shop) => {
       const position = new kakao.maps.LatLng(shop.latitude, shop.longitude)
 
+      const showHeart = isMyPick && shop.isPicked
+
       const content = `
-        <div style="display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));">
-          <div style="width: 36px; height: 36px; background: white; border-radius: 50%; border: 2px solid #EA113B; display: flex; justify-content: center; align-items: center; margin-bottom: 5px;">
+        <div style="
+          position: relative;
+          display: flex; 
+          flex-direction: column; 
+          align-items: center;
+          filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));
+        ">
+          ${
+            showHeart
+              ? `
+            <div style="
+              position: absolute;
+              top: -38px;
+              z-index: 20;
+              animation: bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            ">
+              <img src="${myPickPinIcon}" width="45" height="55" alt="picked" />
+            </div>
+            `
+              : ''
+          }
+
+          <div style="
+            width: 36px; 
+            height: 36px; 
+            background: white; 
+            border-radius: 50%; 
+            border: 2px solid ${showHeart ? '#FF4D77' : '#EA113B'}; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            margin-bottom: 5px;
+            z-index: 10;
+          ">
             <svg width="19" height="20" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8.925 0C9.35 0.2125 10.2 1.615 10.2 2.55C10.2 3.485 9.6305 3.825 8.925 3.825C8.2195 3.825 7.65 3.6975 7.65 2.7625C7.65 1.8275 8.5 1.275 8.925 0ZM14.875 7.225C17 7.225 18.7 8.925 18.7 11.05C18.7 12.376 18.0285 13.5405 17 14.229V19.125H1.7V14.229C0.6715 13.5405 0 12.376 0 11.05C0 8.925 1.7 7.225 3.825 7.225H7.65V4.675H10.2V7.225H14.875ZM9.35 13.175C9.91359 13.175 10.4541 12.9511 10.8526 12.5526C11.2511 12.1541 11.475 11.6136 11.475 11.05H12.75C12.75 11.6136 12.9739 12.1541 13.3724 12.5526C13.7709 12.9511 14.3114 13.175 14.875 13.175C15.4386 13.175 15.9791 12.9511 16.3776 12.5526C16.7761 12.1541 17 11.6136 17 11.05C17 10.4864 16.7761 9.94591 16.3776 9.5474C15.9791 9.14888 15.4386 8.925 14.875 8.925H3.825C3.26142 8.925 2.72091 9.14888 2.3224 9.5474C1.92388 9.94591 1.7 10.4864 1.7 11.05C1.7 11.6136 1.92388 12.1541 2.3224 12.5526C2.72091 12.9511 3.26142 13.175 3.825 13.175C4.38859 13.175 4.92909 12.9511 5.3276 12.5526C5.72612 12.1541 5.95 11.6136 5.95 11.05H7.225C7.225 11.6136 7.44888 12.1541 7.8474 12.5526C8.24591 12.9511 8.78642 13.175 9.35 13.175Z" fill="#EA113B"/>
+              <path d="M8.925 0C9.35 0.2125 10.2 1.615 10.2 2.55C10.2 3.485 9.6305 3.825 8.925 3.825C8.2195 3.825 7.65 3.6975 7.65 2.7625C7.65 1.8275 8.5 1.275 8.925 0ZM14.875 7.225C17 7.225 18.7 8.925 18.7 11.05C18.7 12.376 18.0285 13.5405 17 14.229V19.125H1.7V14.229C0.6715 13.5405 0 12.376 0 11.05C0 8.925 1.7 7.225 3.825 7.225H7.65V4.675H10.2V7.225H14.875ZM9.35 13.175C9.91359 13.175 10.4541 12.9511 10.8526 12.5526C11.2511 12.1541 11.475 11.6136 11.475 11.05H12.75C12.75 11.6136 12.9739 12.1541 13.3724 12.5526C13.7709 12.9511 14.3114 13.175 14.875 13.175C15.4386 13.175 15.9791 12.9511 16.3776 12.5526C16.7761 12.1541 17 11.6136 17 11.05C17 10.4864 16.7761 9.94591 16.3776 9.5474C15.9791 9.14888 15.4386 8.925 14.875 8.925H3.825C3.26142 8.925 2.72091 9.14888 2.3224 9.5474C1.92388 9.94591 1.7 10.4864 1.7 11.05C1.7 11.6136 1.92388 12.1541 2.3224 12.5526C2.72091 12.9511 3.26142 13.175 3.825 13.175C4.38859 13.175 4.92909 12.9511 5.3276 12.5526C5.72612 12.1541 5.95 11.6136 5.95 11.05H7.225C7.225 11.6136 7.44888 12.1541 7.8474 12.5526C8.24591 12.9511 8.78642 13.175 9.35 13.175Z" fill="${showHeart ? '#FF4D77' : '#EA113B'}"/>
             </svg>
           </div>
-          <div style="font-size: 13px; font-weight: 700; color: #111; white-space: nowrap; text-align: center; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">
+
+          <div style="
+            font-size: 13px; 
+            font-weight: 700; 
+            color: #111; 
+            white-space: nowrap; 
+            text-align: center; 
+            text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+          ">
             ${shop.shopName}
           </div>
+           
+          <style>
+            @keyframes bounce {
+              0% { transform: translateY(10px) scale(0); opacity: 0; }
+              80% { transform: translateY(-5px) scale(1.1); opacity: 1; }
+              100% { transform: translateY(0) scale(1); opacity: 1; }
+            }
+          </style>
         </div>
       `
+
       const overlay = new kakao.maps.CustomOverlay({
         position,
         content,
         yAnchor: 0.9,
-        zIndex: 3,
+        zIndex: showHeart ? 10 : 3,
       })
       overlay.setMap(mapInstance)
       shopMarkersRef.current.push(overlay)
     })
-  }, [shops, mapInstance])
+  }, [shops, mapInstance, isMyPick])
 
   useEffect(() => {
     const handleResize = () => {
