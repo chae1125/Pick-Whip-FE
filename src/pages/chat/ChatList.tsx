@@ -1,45 +1,23 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import ArrowLeftIcon from '../../assets/chat-icon/arrow-left.svg?react'
 import ChatListItem from '../../components/chat/ChatListItem'
 import { SearchInput } from '@/components/input/SearchInput'
-
-interface ChatPreview {
-  id: string
-  name: string
-  lastMessage: string
-  time: string
-  unreadCount: number
-}
-
-// 임시 데이터
-const DUMMY_CHATS: ChatPreview[] = [
-  {
-    id: '1',
-    name: '스위트 드림즈 베이커리',
-    lastMessage: '안녕하세요! 주문해주셔서 감사합니다. 딸기 많이...',
-    time: '10분 전',
-    unreadCount: 1,
-  },
-  {
-    id: '2',
-    name: '베리케이크',
-    lastMessage: '네, 아이스팩 제공해드리고 있습니다. 주문 ...',
-    time: '10분 전',
-    unreadCount: 1,
-  },
-  {
-    id: '3',
-    name: '골든케이크',
-    lastMessage: '네, 아이스팩 제공해드리고 있습니다. 주문 ...',
-    time: '10분 전',
-    unreadCount: 1,
-  },
-]
+import { getChatRoomList } from '@/apis/chat'
 
 export default function ChatList() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
+  // TODO: 실제 userId 연결 필요
+  const userId = 1
+
+  const { data } = useQuery({
+    queryKey: ['chatRooms', userId, search],
+    queryFn: () => getChatRoomList({ userId, keyword: search, size: 100 }),
+  })
+
+  const chatRooms = data?.chatRooms || []
 
   return (
     <div className="flex h-screen flex-col bg-sub-white-100">
@@ -57,9 +35,13 @@ export default function ChatList() {
       <div className="h-1 w-full bg-[#E8C2C6]" />
 
       <div className="flex-1 overflow-y-auto py-2">
-        {DUMMY_CHATS.map((chat) => (
-          <ChatListItem key={chat.id} chat={chat} />
-        ))}
+        {chatRooms.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-gray-400">
+            채팅방이 없습니다.
+          </div>
+        ) : (
+          chatRooms.map((chat) => <ChatListItem key={chat.roomId} chat={chat} />)
+        )}
       </div>
     </div>
   )

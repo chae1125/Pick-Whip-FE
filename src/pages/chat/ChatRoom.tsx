@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { X } from 'lucide-react'
 import ArrowLeftIcon from '../../assets/chat-icon/arrow-left.svg?react'
 import PersonIcon from '../../assets/chat-icon/person.svg?react'
@@ -7,29 +8,7 @@ import ImgIcon from '../../assets/chat-icon/img-icon.svg?react'
 import SendIcon from '../../assets/chat-icon/send-white.svg?react'
 import OrderListCard, { type OrderInfo } from '../../components/order-history/OrderListCard'
 import OrderDetailsCard, { type OrderDetail } from '../../components/OrderDetailsCard'
-
-interface Message {
-  id: string
-  text: string
-  isMe: boolean
-  time: string
-}
-
-// 임시 데이터
-const DUMMY_MESSAGES: Message[] = [
-  {
-    id: '1',
-    text: '안녕하세요, 주문서 작성한 김케이크입니다. 혹시 딸기를 추가할 수 있나요?',
-    isMe: true,
-    time: '오전 10:00',
-  },
-  {
-    id: '2',
-    text: '안녕하세요! 주문해주셔서 감사합니다.\n딸기 많이 올려드릴게요!',
-    isMe: false,
-    time: '오전 10:03',
-  },
-]
+import { getChatMessages } from '@/apis/chat'
 
 // 임시 주문 데이터
 const DUMMY_ORDER_INFO: OrderInfo = {
@@ -75,13 +54,36 @@ const DUMMY_ORDER_DETAIL: OrderDetail = {
 
 export default function ChatRoom() {
   const navigate = useNavigate()
+  const { roomId } = useParams()
+  const location = useLocation()
+  const shopName = location.state?.shopName || '케이크샵'
+
   const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState<Message[]>(DUMMY_MESSAGES)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // 임시 가게 이름
-  const bakeryName = '스위트 드림즈 베이커리'
+  // TODO: 실제 userId 연결 필요
+  const userId = 1
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ['chatMessages', roomId],
+    queryFn: ({ pageParam }) =>
+      getChatMessages({
+        roomId: Number(roomId),
+        userId,
+        cursor: pageParam ? Number(pageParam) : undefined,
+        size: 20,
+      }),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: !!roomId,
+  })
+
+  const messages = useMemo(() => {
+    if (!data) return []
+    const allMessages = data.pages.flatMap((page) => page.messageList)
+    return [...allMessages].reverse()
+  }, [data])
 
   // 임시: 주문 상태 여부 (true-주문 후/false-주문 전)
   const [isOrdered, setIsOrdered] = useState(true)
@@ -91,26 +93,16 @@ export default function ChatRoom() {
   }
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    if (!isFetchingNextPage) {
+      scrollToBottom()
+    }
+  }, [messages.length, isFetchingNextPage])
 
   const handleSendMessage = () => {
     if (!message.trim()) return
 
-    const now = new Date()
-    const hours = now.getHours()
-    const minutes = now.getMinutes()
-    const ampm = hours >= 12 ? '오후' : '오전'
-    const formattedTime = `${ampm} ${hours % 12 || 12}:${minutes.toString().padStart(2, '0')}`
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: message,
-      isMe: true,
-      time: formattedTime,
-    }
-
-    setMessages((prev) => [...prev, newMessage])
+    // TODO: 메시지 전송 연결 필요함
+    console.log('Send message:', message)
     setMessage('')
   }
 
@@ -127,7 +119,7 @@ export default function ChatRoom() {
         <button onClick={() => navigate(-1)} className="flex items-center justify-start py-2 pr-4">
           <ArrowLeftIcon className="h-6 w-6 text-gray-800" />
         </button>
-        <h2 className="text-center text-[16px] font-bold text-gray-800">{bakeryName}</h2>
+        <h2 className="text-center text-[16px] font-bold text-gray-800">{shopName}</h2>
         {/* 임시 토글 버튼 - 확인용 */}
         <button
           onClick={() => setIsOrdered(!isOrdered)}
@@ -153,44 +145,69 @@ export default function ChatRoom() {
           </div>
         )}
 
+        {hasNextPage && (
+          <div className="flex justify-center py-2">
+            <button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="rounded bg-gray-200 px-3 py-1 text-xs text-gray-600"
+            >
+              {isFetchingNextPage ? '로딩 중...' : '이전 메시지 더보기'}
+            </button>
+          </div>
+        )}
+
         <div className="flex justify-center py-4">
           <div className="rounded-full bg-chat-date/75 px-5 py-2 text-[12px] text-gray-600 shadow-sm">
             2026년 1월 19일
           </div>
         </div>
 
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex w-full ${msg.isMe ? 'flex-row-reverse items-end' : 'flex-row items-start'} gap-2`}
-          >
-            {!msg.isMe && (
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 mt-1 overflow-hidden">
-                <PersonIcon className="h-5 w-5 text-rose-400" />
-              </div>
-            )}
-
-            <div className={`flex flex-col ${msg.isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
-              {!msg.isMe && (
-                <span className="mb-1 ml-1 text-[12px] font-medium text-gray-600">
-                  {bakeryName}
-                </span>
-              )}
-              <div className={`flex items-end gap-1 ${msg.isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div
-                  className={`rounded-2xl px-4 py-2 text-[14px] leading-relaxed shadow-sm ${
-                    msg.isMe
-                      ? 'bg-[#E68A8A] text-white rounded-tr-none' // 내가 보낸 메시지
-                      : 'bg-white text-gray-800 rounded-tl-none border border-gray-100' // 상대방이 보낸 메시지
-                  }`}
-                >
-                  <div className="whitespace-pre-wrap">{msg.text}</div>
+        {messages.map((msg) => {
+          const isMe = msg.senderId === userId
+          return (
+            <div
+              key={msg.messageId}
+              className={`flex w-full ${isMe ? 'flex-row-reverse items-end' : 'flex-row items-start'} gap-2`}
+            >
+              {!isMe && (
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 mt-1 overflow-hidden">
+                  <PersonIcon className="h-5 w-5 text-rose-400" />
                 </div>
-                <span className="mb-1 whitespace-nowrap text-[10px] text-gray-400">{msg.time}</span>
+              )}
+
+              <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
+                {!isMe && (
+                  <span className="mb-1 ml-1 text-[12px] font-medium text-gray-600">
+                    {shopName}
+                  </span>
+                )}
+                <div className={`flex items-end gap-1 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div
+                    className={`rounded-2xl px-4 py-2 text-[14px] leading-relaxed shadow-sm ${
+                      isMe
+                        ? 'bg-[#E68A8A] text-white rounded-tr-none' // 내가 보낸 메시지
+                        : 'bg-white text-gray-800 rounded-tl-none border border-gray-100' // 상대방이 보낸 메시지
+                    }`}
+                  >
+                    {msg.type === 'IMAGE' && msg.imageUrl ? (
+                      <img
+                        src={msg.imageUrl}
+                        alt="전송된 이미지"
+                        className="max-w-full rounded-lg"
+                      />
+                    ) : (
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                    )}
+                  </div>
+                  <span className="mb-1 whitespace-nowrap text-[10px] text-gray-400">
+                    {msg.createdAt.slice(11, 16)}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         <div ref={messagesEndRef} />
       </main>
 
@@ -220,8 +237,6 @@ export default function ChatRoom() {
           </button>
         </div>
       </footer>
-
-      {/* 주문 상세 모달 */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-[20px] bg-white shadow-xl animate-in zoom-in-95 duration-200 hide-scrollbar">
