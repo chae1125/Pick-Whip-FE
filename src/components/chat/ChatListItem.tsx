@@ -1,16 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import PersonIcon from '../../assets/chat-icon/person.svg?react'
-
-interface ChatPreview {
-  id: string
-  name: string
-  lastMessage: string
-  time: string
-  unreadCount: number
-}
+import type { ChatRoom } from '@/types/chat'
 
 interface ChatListItemProps {
-  chat: ChatPreview
+  chat: ChatRoom
 }
 
 export default function ChatListItem({ chat }: ChatListItemProps) {
@@ -18,7 +11,7 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
 
   return (
     <div
-      onClick={() => navigate(`/chat/${chat.id}`)}
+      onClick={() => navigate(`/chat/${chat.roomId}`, { state: { shopName: chat.shopName } })}
       className="flex cursor-pointer items-center border-b border-gray-200 px-5 py-7"
     >
       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-chat-header">
@@ -27,8 +20,8 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
 
       <div className="ml-4 flex-1 overflow-hidden">
         <div className="flex items-center justify-between">
-          <div className="text-[15px] font-bold text-gray-800">{chat.name}</div>
-          <span className="text-xs text-gray-500">{chat.time}</span>
+          <div className="text-[15px] font-bold text-gray-800">{chat.shopName}</div>
+          <span className="text-xs text-gray-500">{chat.lastMessageTime?.slice(0, 10)}</span>
         </div>
         <div className="mt-1 flex items-center justify-between">
           <div className="truncate text-[14px] text-gray-600">{chat.lastMessage}</div>

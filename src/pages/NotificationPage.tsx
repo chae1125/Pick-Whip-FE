@@ -1,9 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import BackHeader from '@/components/BackHeader'
 
 import type { NotificationItem, NotificationTabKey, NotificationTab } from '../types/notification'
 import Badge from '../components/notification/Badge'
 import NotificationCard from '../components/notification/NotificationCard'
+
+import {
+  getNotifications,
+  patchNotificationRead,
+  patchNotificationsReadAll,
+} from '@/apis/notification'
+import type { NotificationResponseItem, NotificationType } from '@/apis/notification'
 
 const TABS: NotificationTab[] = [
   { key: 'all', label: '전체' },
@@ -12,110 +19,116 @@ const TABS: NotificationTab[] = [
   { key: 'etc', label: '기타' },
 ]
 
-const dummy: NotificationItem[] = [
-  {
-    id: 1,
-    type: 'order',
-    title: '주문서가 전달되었습니다',
-    body: '스위트 드림즈 베이커리에서 주문서를 확인 후 알려드릴게요!',
-    timeAgo: '1시간 전',
-    read: false,
-  },
-  {
-    id: 2,
-    type: 'order',
-    action: 'pickup_ready',
-    title: '케이크 픽업이 준비되었습니다',
-    body: '달콤한 순간에서 케이크가 준비되었어요. 픽업 시간을 확인해주세요.',
-    timeAgo: '3시간 전',
-    read: false,
-  },
-  {
-    id: 3,
-    type: 'review',
-    title: '사장님이 답변을 남겼어요',
-    body: '작성하신 리뷰에 메종 드 가토 사장님이 답변을 남겼습니다.',
-    timeAgo: '2일 전',
-    read: false,
-  },
-  {
-    id: 4,
-    type: 'review',
-    title: '리뷰를 작성해주세요',
-    body: '케이크는 어떠셨나요? 소중한 후기를 남겨주세요!',
-    timeAgo: '2일 전',
-    read: false,
-  },
-  {
-    id: 5,
-    type: 'etc',
-    title: '크리스마스 특별 할인',
-    body: '12월 한정! 크리스마스 케이크 10% 할인 이벤트가 진행중이에요.',
-    timeAgo: '6일 전',
-    read: false,
-  },
-]
+const toServerType = (tab: NotificationTabKey): NotificationType | undefined => {
+  if (tab === 'all') return undefined
+  return tab.toUpperCase() as NotificationType
+}
 
-const systemDummy: NotificationItem[] = [
-  {
-    id: 101,
-    type: 'etc',
-    status: 'success',
-    title: '주문서가 전달되었습니다',
-    body: '스위트 드림즈 베이커리에서 주문서를 확인 후 알려드릴게요!',
-    timeAgo: '1시간 전',
-    read: false,
-  },
-  {
-    id: 102,
-    type: 'etc',
-    status: 'warning',
-    title: '신고가 접수되었습니다',
-    body: '3~5 영업일 내에 검토하여 답변 드리겠습니다.',
-    timeAgo: '1시간 전',
-    read: false,
-  },
-  {
-    id: 103,
-    type: 'etc',
-    status: 'neutral',
-    title: '결제가 완료되면 주문이 확정됩니다',
-    body: '스위트 드림즈 베이커리에서 주문을 확정했어요. 결제를 진행해주세요.',
-    timeAgo: '1시간 전',
-    read: false,
-  },
-  {
-    id: 104,
-    type: 'etc',
-    status: 'warning',
-    title: '접수하신 신고에 대해 안내드립니다',
-    body: '신고하신 내용에 대한 답변 드립니다.',
-    timeAgo: '1시간 전',
-    read: false,
-  },
-  {
-    id: 105,
-    type: 'etc',
-    status: 'success',
-    title: '사장님이 결제를 확인했어요',
-    body: '스위트 드림즈 베이커리에서 케이크 제작을 시작했어요. 조금만 기다려주시면 정성껏 준비해드릴게요!',
-    timeAgo: '1시간 전',
-    read: false,
-  },
-  {
-    id: 106,
-    type: 'etc',
-    status: 'danger',
-    title: '결제가 정상적으로 처리되지 않았어요',
-    body: '결제가 완료되지 않았거나, 결제 과정에 오류가 있을 수 있으니 다시 결제를 진행해주세요.',
-    timeAgo: '1시간 전',
-    read: false,
-  },
-]
+const toTimeAgo = (dateStr: string) => {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const created = new Date(y, m - 1, d)
+  const diff = Date.now() - created.getTime()
+
+  const min = Math.floor(diff / (1000 * 60))
+  if (min < 60) return `${Math.max(1, min)}분 전`
+
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}시간 전`
+
+  const day = Math.floor(hr / 24)
+  return `${day}일 전`
+}
+
+const mapNotification = (n: NotificationResponseItem): NotificationItem => ({
+  id: n.notificationId,
+  type: n.type.toLowerCase() as NotificationItem['type'],
+  title: n.title,
+  body: n.content,
+  timeAgo: toTimeAgo(n.createdDate),
+  read: n.isRead,
+})
 
 export default function NotificationPage() {
   const [tab, setTab] = useState<NotificationTabKey>('all')
-  const [items, setItems] = useState<NotificationItem[]>(() => [...systemDummy, ...dummy])
+  const [items, setItems] = useState<NotificationItem[]>([])
+
+  const cursorRef = useRef<number | null>(null)
+  const hasNextRef = useRef(true)
+
+  const [hasNext, setHasNext] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const loadingRef = useRef(false)
+
+  const isEmpty = !initialLoading && items.length === 0
+
+  const fetchNotifications = useCallback(
+    async (isReset = false) => {
+      if (loadingRef.current) return
+      if (!isReset && !hasNextRef.current) return
+
+      loadingRef.current = true
+      setLoading(true)
+
+      if (isReset) {
+        setInitialLoading(true)
+      }
+
+      try {
+        const res = await getNotifications({
+          notificationType: toServerType(tab),
+          cursor: isReset ? undefined : (cursorRef.current ?? undefined),
+          size: 20,
+        })
+
+        const mapped = res.notifications.map(mapNotification)
+        const nextHasNext = mapped.length > 0 ? res.hasNext : false
+
+        setItems((prev) => (isReset ? mapped : [...prev, ...mapped]))
+
+        cursorRef.current = res.nextCursor
+        hasNextRef.current = nextHasNext
+        setHasNext(nextHasNext)
+      } catch (error) {
+        console.error(error)
+      } finally {
+        loadingRef.current = false
+        setLoading(false)
+        if (isReset) {
+          setInitialLoading(false)
+        }
+      }
+    },
+    [tab],
+  )
+
+  useEffect(() => {
+    const el = loadMoreRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextRef.current && !loadingRef.current) {
+          fetchNotifications(false)
+        }
+      },
+      { threshold: 0.1 },
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [fetchNotifications])
+
+  useEffect(() => {
+    setItems([])
+    cursorRef.current = null
+    hasNextRef.current = true
+    setHasNext(true)
+    setInitialLoading(true)
+    fetchNotifications(true)
+  }, [tab, fetchNotifications])
 
   const counts = useMemo(() => {
     const by: Record<NotificationTabKey, number> = { all: 0, order: 0, review: 0, etc: 0 }
@@ -133,18 +146,34 @@ export default function NotificationPage() {
     return items.filter((it) => it.type === tab)
   }, [items, tab])
 
-  const markAllRead = () => setItems((prev) => prev.map((it) => ({ ...it, read: true })))
+  const markAllRead = async () => {
+    const hasUnread = items.some((it) => !it.read)
+    if (!hasUnread) return
+    const prevItems = items
+    setItems((prev) => prev.map((it) => ({ ...it, read: true })))
+    try {
+      await patchNotificationsReadAll()
+    } catch {
+      setItems(prevItems)
+    }
+  }
 
-  const handleRead = (id: number) => {
+  const handleRead = async (id: number) => {
+    const alreadyRead = items.find((i) => i.id === id)?.read
+    if (alreadyRead) return
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, read: true } : it)))
+    try {
+      await patchNotificationRead(id)
+    } catch {
+      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, read: false } : it)))
+    }
   }
 
   return (
     <div className="bg-[#FCF4F3]">
-      <div className="mx-auto min-h-screen w-full max-w-lg ">
+      <div className="mx-auto min-h-screen w-full max-w-lg">
         <div className="relative px-2">
           <BackHeader title="알림" bgColor="#FCF4F3" titleClassName="font-bold" />
-
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[var(--color-review-owner-title)]">
             새 알림 <span className="text-[#D65151]">{counts.all}</span>
           </div>
@@ -154,8 +183,7 @@ export default function NotificationPage() {
           <div className="flex flex-1">
             {TABS.map((t) => {
               const active = tab === t.key
-              const key = t.key
-              const cnt = counts[key]
+              const cnt = counts[t.key]
               return (
                 <button
                   key={t.key}
@@ -167,7 +195,6 @@ export default function NotificationPage() {
                     {t.label}
                     <Badge count={cnt} active={active} />
                   </span>
-
                   {active && (
                     <span className="absolute left-0 right-0 -bottom-[1px] mx-auto h-[2px] w-full rounded-full bg-[#E85C5C]" />
                   )}
@@ -175,7 +202,6 @@ export default function NotificationPage() {
               )
             })}
           </div>
-
           <button
             type="button"
             onClick={markAllRead}
@@ -189,9 +215,23 @@ export default function NotificationPage() {
 
         <main className="pb-10 pt-5">
           <div className="flex flex-col gap-4 px-4">
-            {filtered.map((item) => (
-              <NotificationCard key={item.id} item={item} onClick={handleRead} />
-            ))}
+            {initialLoading ? (
+              <div className="py-16 text-center text-xs text-gray-400">불러오는 중...</div>
+            ) : isEmpty ? (
+              <div className="py-16 text-center text-[13px] text-gray-400">알림이 없습니다</div>
+            ) : (
+              <>
+                {filtered.map((item) => (
+                  <NotificationCard key={item.id} item={item} onClick={handleRead} />
+                ))}
+
+                {hasNext && !initialLoading && <div ref={loadMoreRef} className="h-10 w-full" />}
+
+                {!initialLoading && loading && (
+                  <div className="px-4 py-4 text-center text-xs text-gray-400">불러오는 중...</div>
+                )}
+              </>
+            )}
           </div>
         </main>
       </div>

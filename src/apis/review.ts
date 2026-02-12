@@ -32,7 +32,7 @@ type BestOptionsResponse = {
 }
 
 export const getBestReviews = async (): Promise<BestOptionItem[]> => {
-  const res = await instance.get<BestOptionsResponse>('/api/reviews/best')
+  const res = await instance.get<BestOptionsResponse>('/reviews/best')
 
   return res.data?.result?.items ?? []
 }
