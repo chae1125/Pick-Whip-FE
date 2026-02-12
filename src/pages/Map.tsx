@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { MapInput } from '../components/input/MapInput'
 import { BottomSheet } from '../components/BottomSheet'
 import KakaoMap from '../components/map/KakaoMap'
@@ -17,8 +17,18 @@ import {
   INITIAL_PRICE,
   INITIAL_DATE,
 } from '@/constants/filter'
+import { getShopsInMap } from '@/apis/map'
+import type { MapBounds, MapShop } from '@/apis/map'
 
 export default function Map() {
+  const [shops, setShops] = useState<MapShop[]>([])
+  const [isMyPick, setIsMyPick] = useState<boolean>(false)
+
+  const handleBoundsChange = useCallback(async (bounds: MapBounds) => {
+    const data = await getShopsInMap(bounds)
+    if (data.isSuccess) setShops(data.result?.shops ?? [])
+  }, [])
+
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
   const [activeKey, setActivekey] = useState<string>(FILTER_TABS[0].key)
@@ -91,7 +101,34 @@ export default function Map() {
         <div className="px-4 py-2 pointer-events-auto">
           <MapInput value={keyword} onChange={setKeyword} onFilterClick={handleOpenFilter} />
         </div>
-        <div className="pointer-events-auto">
+
+        <div className="pointer-events-auto px-4 flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
+          <button
+            onClick={() => setIsMyPick(!isMyPick)}
+            className={`
+              flex items-center gap-1 px-3 py-1.5 rounded-full !text-[14px] font-semibold border transition-all shrink-0
+              ${
+                isMyPick
+                  ? 'bg-[#FE577A] border-[#FE577A] text-white'
+                  : 'bg-white border-gray-200 text-[#0A0A0A] hover:bg-gray-50'
+              }
+            `}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill={isMyPick ? '#FFFFFF' : 'none'}
+              stroke={isMyPick ? '#FFFFFF' : '#373E49'}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+            </svg>
+            My Pick!
+          </button>
+
           <FilterSummary
             filters={appliedFilters}
             pickupDate={appliedPickupDate}
@@ -105,7 +142,7 @@ export default function Map() {
       </div>
 
       <div className="w-full h-full border-none">
-        <KakaoMap />
+        <KakaoMap onBoundsChange={handleBoundsChange} shops={shops} isMyPick={isMyPick} />
       </div>
 
       <BottomSheet isOpen={isFilterOpen} title="필터" onClose={() => setIsFilterOpen(false)}>

@@ -108,7 +108,7 @@ export default function FilterSummary({
   ].filter((c) => c.active)
 
   return (
-    <div className="flex gap-2 overflow-x-auto px-4 py-1.5 no-scrollbar items-center">
+    <div className="flex gap-2 overflow-x-auto py-1.5 no-scrollbar items-center">
       {chips.map((chip) => (
         <div
           key={chip.key}
