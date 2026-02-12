@@ -1,4 +1,5 @@
-import type { ReviewTag, ReviewOwnerReply } from '../../../types/review'
+import type { ReviewKeyword } from '@/apis/shop'
+import type { ReviewOwnerReply } from '../../../types/review'
 import { RatingStars } from '../../reviewCard/RatingStars'
 import { ReviewTags } from '../../reviewCard/ReviewTag'
 import { OwnerReply } from '../../reviewCard/OwnerReply'
@@ -9,8 +10,8 @@ type Props = {
   createdAt: string
   rating: number
   content: string
-  tags?: ReviewTag[]
-  extraTagCount?: number
+  keywords?: ReviewKeyword[]
+  max?: number
   ownerReply?: ReviewOwnerReply
 }
 
@@ -20,12 +21,12 @@ export default function ReviewMeta({
   createdAt,
   rating,
   content,
-  tags,
-  extraTagCount,
+  keywords,
+  max,
   ownerReply,
 }: Props) {
-  const safeTags: ReviewTag[] = tags ?? []
-  const safeExtraTagCount: number = extraTagCount ?? 0
+  const safeTags: ReviewKeyword[] = keywords ?? []
+  const safeExtraTagCount: number = max ?? 0
 
   return (
     <div className="mt-10">
@@ -52,7 +53,7 @@ export default function ReviewMeta({
       </div>
 
       <div className="mt-4">
-        <ReviewTags tags={safeTags} extraTagCount={safeExtraTagCount} />
+        <ReviewTags keywords={safeTags} max={safeExtraTagCount} />
       </div>
 
       <div className="mt-5 mb-15">

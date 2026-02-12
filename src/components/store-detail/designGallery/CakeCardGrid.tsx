@@ -14,7 +14,12 @@ export default function CakeCardGrid({ page, columns, onClickCard, onToggleLike 
   return (
     <div className={`grid gap-x-3 gap-y-6 ${gridColsClass}`}>
       {page.map((item) => (
-        <CakeCardTile key={item.id} item={item} onClick={onClickCard} onToggleLike={onToggleLike} />
+        <CakeCardTile
+          key={item.designId}
+          item={item}
+          onClick={onClickCard}
+          onToggleLike={onToggleLike}
+        />
       ))}
       {page.length === 0 && <div className="min-h-[1px]" />}
     </div>

@@ -1,14 +1,9 @@
 import { Star } from 'lucide-react'
 
-type RankItem = {
-  label: string
-  percent: number
-}
-
 type ReviewSummaryCardProps = {
   rating: number
   totalReviews: number
-  ranks: RankItem[]
+  keywordRanking: Record<string, number>
   className?: string
 }
 
@@ -21,40 +16,80 @@ function overlayOpacityByRank(idx: number) {
   return ops[idx] ?? 0.1
 }
 
-export default function ReviewSummaryCard({ rating, totalReviews, ranks }: ReviewSummaryCardProps) {
-  const filledStars = 5
+const LABEL_BY_KEY: Record<string, string> = {
+  designSatisfaction: '디자인만족',
+  sameAsResult: '결과물동일',
+  taste: '맛',
+  communication: '소통',
+  pickup: '픽업진행',
+}
+
+function buildRankItems(keywordRanking: Record<string, number>) {
+  const items = Object.entries(keywordRanking ?? {}).map(([key, value]) => ({
+    key,
+    label: LABEL_BY_KEY[key] ?? key,
+    value: Number(value) || 0,
+  }))
+
+  items.sort((a, b) => b.value - a.value)
+  return items.slice(0, 5)
+}
+
+function getStarFillRatios(rating: number) {
+  const r = Math.max(0, Math.min(5, rating))
+  return Array.from({ length: 5 }, (_, i) => clamp((r - i) * 100, 0, 100) / 100)
+}
+
+export default function ReviewSummaryCard({
+  rating,
+  totalReviews,
+  keywordRanking,
+  className,
+}: ReviewSummaryCardProps) {
+  const starFill = getStarFillRatios(rating)
+  const rankItems = buildRankItems(keywordRanking)
+
+  const maxValue = rankItems.length ? Math.max(...rankItems.map((x) => x.value)) : 0
 
   return (
-    <div className="w-full">
+    <div className={['w-full', className ?? ''].join(' ')}>
       <p className="mb-3 !text-center !text-[18px] !font-bold !text-[#2B2B2B]"> REVIEW </p>
 
       <section className="w-full h-[300px] rounded-[10px] bg-white border border-black/5 shadow-[0_2px_0_rgba(0,0,0,0.12)] px-7 py-6 mt-3">
         <div className="mt-2 flex items-center justify-center gap-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star
-              key={i}
-              className={[
-                'h-7 w-7',
-                i < filledStars ? 'fill-[#F6B233] text-[#F6B233]' : 'text-[#E6E6E6]',
-              ].join(' ')}
-            />
-          ))}
+          {Array.from({ length: 5 }).map((_, i) => {
+            const fill = starFill[i]
+            return (
+              <span key={i} className="relative inline-block h-7 w-7">
+                <Star className="absolute inset-0 h-7 w-7 text-[#E6E6E6]" />
+                <span
+                  className="absolute inset-0 overflow-hidden"
+                  style={{ width: `${fill * 100}%` }}
+                >
+                  <Star className="h-7 w-7 fill-[#F6B233] text-[#F6B233]" />
+                </span>
+              </span>
+            )
+          })}
         </div>
 
         <div className="mt-4 text-center">
-          <p className="!text-[24px] !font-regular !text-[#1E2A3B]">{rating.toFixed(1)}</p>
+          <p className="!text-[24px] !font-regular !text-[#1E2A3B]">
+            {Number(rating || 0).toFixed(1)}
+          </p>
           <p className="!text-[12px] !text-[#7C8699]">총 {totalReviews}개 리뷰</p>
         </div>
 
         <div className="mt-4 space-y-2">
-          {ranks.slice(0, 5).map((item, idx) => {
-            const leftPct = clamp(item.percent)
+          {rankItems.map((item, idx) => {
+            const leftPct = maxValue > 0 ? clamp((item.value / maxValue) * 100) : 0
             const rightPct = 100 - leftPct
             const overlayOpacity = overlayOpacityByRank(idx)
 
             return (
-              <div key={item.label} className="flex items-center">
+              <div key={item.key} className="flex items-center">
                 <span className="w-[40px] text-[12px] text-[#4A5565]">{idx + 1}순위</span>
+
                 <div className="flex-1">
                   <div className="h-[16px] w-full overflow-hidden rounded-[3px]">
                     <div className="flex h-full w-full">
@@ -77,6 +112,7 @@ export default function ReviewSummaryCard({ rating, totalReviews, ranks }: Revie
                     </div>
                   </div>
                 </div>
+
                 <span className="w-[65px] text-right text-[12px] text-[#4A5565]">{item.label}</span>
               </div>
             )

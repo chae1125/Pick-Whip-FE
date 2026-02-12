@@ -7,6 +7,7 @@ interface BottomSheetProps {
   description?: string
   onClose: () => void
   children: ReactNode
+  sheetBg?: string
 }
 
 const MIN_HEIGHT = 0.7
@@ -14,7 +15,14 @@ const MAX_HEIGHT = 1
 const CLOSE_HEIGHT_THRESHOLD = 0.6
 const CLOSE_VELOCITY = 800
 
-export function BottomSheet({ isOpen, title, description, onClose, children }: BottomSheetProps) {
+export function BottomSheet({
+  isOpen,
+  title,
+  description,
+  onClose,
+  children,
+  sheetBg,
+}: BottomSheetProps) {
   const sheetHeight = useMotionValue(window.innerHeight * MIN_HEIGHT)
 
   const radius = useTransform(sheetHeight, (h) => {
@@ -51,6 +59,7 @@ export function BottomSheet({ isOpen, title, description, onClose, children }: B
               height: sheetHeight,
               borderTopLeftRadius: radius,
               borderTopRightRadius: radius,
+              backgroundColor: sheetBg,
             }}
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
