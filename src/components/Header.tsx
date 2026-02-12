@@ -15,6 +15,7 @@ import {
 import { HamburgerButton } from './HamburgerButton'
 import { useNavigate } from 'react-router-dom'
 import { getMe } from '@/apis/user'
+import { getUnreadCount } from '@/apis/notification'
 
 export function Header() {
   const navigate = useNavigate()
@@ -24,7 +25,7 @@ export function Header() {
 
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
-  const [hasUnread /* setHasUnread */] = useState(true)
+  const [unreadCount, setUnreadCount] = useState<number>(0)
   const [me, setMe] = useState<null | {
     nickname: string
     email: string
@@ -74,6 +75,16 @@ export function Header() {
       })
   }, [isMounted, me])
 
+  useEffect(() => {
+    if (location.pathname === '/notifications') return
+
+    getUnreadCount()
+      .then(setUnreadCount)
+      .catch((e) => {
+        console.error('안 읽은 알림 개수 조회 실패', e)
+      })
+  }, [location.pathname])
+
   return (
     <>
       <div className="fixed top-3 right-6 z-[70]">
@@ -101,7 +112,7 @@ export function Header() {
           >
             <Bell size={25} />
 
-            {hasUnread && (
+            {unreadCount > 0 && (
               <span className="absolute -top-[0.5px] -right-[0.5px] h-1.5 w-1.5 rounded-full bg-[#E85C5C]" />
             )}
           </button>
