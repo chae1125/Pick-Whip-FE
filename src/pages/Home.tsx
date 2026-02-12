@@ -18,9 +18,9 @@ import { getDesignGallery } from '@/apis/home'
 import type { DesignGalleryItem, DesignSort } from '@/apis/home'
 import { getUserIdFromToken } from '@/utils/auth'
 
-import PromoBanner from '../assets/img/promoBanner.png'
-import PromoBanner2 from '../assets/img/promoBanner2.png'
-import PromoBanner3 from '../assets/img/promoBanner3.png'
+import PromoBanner from '../assets/img/PromoBanner1.png'
+import PromoBanner2 from '../assets/img/PromoBanner2.png'
+import PromoBanner3 from '../assets/img/PromoBanner3.png'
 
 const PROMO_ITEMS = [
   {
