@@ -9,7 +9,7 @@ type TestTokenResponse = {
 }
 
 export const getTestToken = async (userId: number): Promise<TestTokenResponse> => {
-  const res = await axios.get<TestTokenResponse>('/api/test/token', {
+  const res = await axios.get<TestTokenResponse>('/test/token', {
     params: { userId },
   })
   return res.data

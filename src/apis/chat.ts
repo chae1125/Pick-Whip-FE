@@ -19,7 +19,7 @@ import { getResult } from '@/utils/response'
 export async function getChatRoomList(params: GetChatListParams): Promise<ChatRoomListResult> {
   const { userId, keyword, cursor, size = 10 } = params
 
-  const res = await axios.get<ChatRoomListResponse>('/api/chats', {
+  const res = await axios.get<ChatRoomListResponse>('/chats', {
     params: {
       userId,
       keyword,
@@ -36,7 +36,7 @@ export async function createChatRoom(params: CreateChatRoomParams): Promise<Chat
   const { userId, shopId, orderId } = params
 
   const res = await axios.post<CreateChatRoomResponse>(
-    '/api/chats',
+    '/chats',
     {
       shopId,
       orderId: orderId ?? 0,
@@ -55,7 +55,7 @@ export async function getChatMessages(
 ): Promise<ChatMessageListResult> {
   const { roomId, userId, cursor, size = 10 } = params
 
-  const res = await axios.get<ChatMessageListResponse>(`/api/chats/${roomId}/messages`, {
+  const res = await axios.get<ChatMessageListResponse>(`/chats/${roomId}/messages`, {
     params: {
       userId,
       cursor,
@@ -71,7 +71,7 @@ export async function getChatImageUrls(params: GetChatImageUrlsParams): Promise<
   const { roomId, userId, fileNames } = params
 
   const res = await axios.post<GetChatImageUrlsResponse>(
-    `/api/chats/${roomId}/images`,
+    `/chats/${roomId}/images`,
     {
       fileNames,
     },

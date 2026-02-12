@@ -20,7 +20,7 @@ type MeResponse = {
 }
 
 export async function getMe(userId: number): Promise<MeResult> {
-  const res = await axios.get<MeResponse>('/api/users/me', {
+  const res = await axios.get<MeResponse>('/users/me', {
     params: { userId },
   })
 
