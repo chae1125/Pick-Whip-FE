@@ -1,11 +1,11 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Locate } from 'lucide-react'
 
 import { SearchInput } from '../components/input/SearchInput'
 import { BottomSheet } from '../components/BottomSheet'
 import StoreCard from '../components/StoreCard'
 import PromoCarousel from '../components/home/PromoCarousel'
-import CategoryChips from '../components/CategoryChips'
+import CategoryChips, { type CategoryValue } from '../components/CategoryChips'
 import TopFiveSection from '../components/home/TopFiveSection'
 import SortDropdown from '../components/SortDropdown'
 import CakeGallery from '../components/home/CakeGallery'
@@ -14,7 +14,13 @@ import PopularCake from '@/components/home/PopularCake'
 import PromoCopy from '@/components/home/PromoCopy'
 import BestCustomOptionSection from '@/components/home/BestCustomOptionSection'
 
+import { getDesignGallery } from '@/apis/home'
+import type { DesignGalleryItem, DesignSort } from '@/apis/home'
+import { getUserIdFromToken } from '@/utils/auth'
+
 import PromoBanner from '../assets/img/promoBanner.png'
+import PromoBanner2 from '../assets/img/promoBanner2.png'
+import PromoBanner3 from '../assets/img/promoBanner3.png'
 
 const PROMO_ITEMS = [
   {
@@ -23,12 +29,12 @@ const PROMO_ITEMS = [
     subtitle: '따뜻한 연말, 특별한 케이크와 함께',
   },
   {
-    image: PromoBanner,
+    image: PromoBanner2,
     title: '기념일 스페셜',
     subtitle: '소중한 날, 특별한 케이크로 함께하세요',
   },
   {
-    image: PromoBanner,
+    image: PromoBanner3,
     title: '홈파티 추천',
     subtitle: '간편하고 예쁜 파티용 케이크 모음',
   },
@@ -37,10 +43,20 @@ const PROMO_ITEMS = [
 export default function Home() {
   const [keyword, setKeyword] = useState('')
   const [isSheetOpen, setIsSheetOpen] = useState(false)
-  const [sort, setSort] = useState('')
+  const [category, setCategory] = useState<CategoryValue>('전체')
+  const [sort, setSort] = useState<DesignSort>('NAME')
+  const [page, setPage] = useState(0)
+
+  const [region, setRegion] = useState('')
+  const [items, setItems] = useState<DesignGalleryItem[]>([])
+  const [totalPages, setTotalPages] = useState(1)
+  const [loading, setLoading] = useState(false)
+
+  const lat = 37
+  const lon = 127
+  const userId = getUserIdFromToken() ?? 0
 
   const handleKeywordChange = useCallback((v: string) => setKeyword(v), [])
-  const handleSortChange = useCallback((v: string) => setSort(v), [])
   const openSheet = useCallback(() => setIsSheetOpen(true), [])
   const closeSheet = useCallback(() => setIsSheetOpen(false), [])
 
@@ -48,6 +64,45 @@ export default function Home() {
     () => '다가오는 크리스마스,\n마음에 쏙 드는 선물을 찾아보세요!',
     [],
   )
+
+  const fetchGallery = useCallback(async () => {
+    setLoading(true)
+    try {
+      const categoryParam = category === '전체' ? undefined : category
+
+      const res = await getDesignGallery({
+        category: categoryParam,
+        sort,
+        lat,
+        lon,
+        page,
+        userId,
+      })
+
+      setRegion(res.currentRegion)
+      setItems(res.designs)
+      setTotalPages(Math.max(1, res.totalPage))
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }, [category, sort, page, lat, lon, userId])
+
+  useEffect(() => {
+    fetchGallery()
+  }, [fetchGallery])
+
+  const handleCategoryChange = (newCategory: CategoryValue) => {
+    if (category === newCategory) return
+    setCategory(newCategory)
+    setPage(0)
+  }
+
+  const handleSortChange = (value: DesignSort) => {
+    setSort(value)
+    setPage(0)
+  }
 
   return (
     <div className="mt-14 min-h-screen w-full bg-[#FCF4F3]">
@@ -65,7 +120,7 @@ export default function Home() {
         </section>
 
         <section className="mt-6 px-4">
-          <CategoryChips />
+          <CategoryChips value={category} onChange={handleCategoryChange} />
         </section>
 
         <section className="mt-8 px-4">
@@ -75,13 +130,20 @@ export default function Home() {
             <div className="flex items-center gap-1.5 text-sm text-[#0A0A0A]">
               <Locate size={20} className="text-[var(--color-main-pink-100)]" />
               <span className="font-medium">현재 위치:</span>
-              <span>서울시 마포구</span>
+              <span className="font-medium">{region || '위치 확인 중...'}</span>
             </div>
           </div>
         </section>
 
         <section className="mt-4 px-4 pb-10">
-          <CakeGallery />
+          <CakeGallery
+            items={items}
+            page={page + 1}
+            totalPages={totalPages}
+            loading={loading}
+            onPrev={() => setPage((p) => Math.max(0, p - 1))}
+            onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+          />
         </section>
 
         <section className="mt-6">

@@ -1,6 +1,39 @@
-import TopFiveCarousel from './TopFiveCarousel'
+import { useEffect, useState } from 'react'
+import TopFiveCarousel, { type Cake } from './TopFiveCarousel'
+import { getTopFiveCakes } from '@/apis/home'
+import { getUserIdFromToken } from '@/utils/auth'
 
 export default function TopFiveSection() {
+  const [items, setItems] = useState<Cake[]>([])
+
+  const userId = getUserIdFromToken() ?? 0
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getTopFiveCakes(userId)
+
+        const mappedItems: Cake[] = data.map((item) => ({
+          shopName: item.shopName,
+          rating: item.averageRating,
+          productName: item.cakeName,
+          price: item.minPrice,
+          imageUrl: item.cakeImageUrl,
+        }))
+
+        setItems(mappedItems)
+      } catch (error) {
+        console.error('TOP 5 로딩 실패:', error)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (items.length === 0) {
+    return null
+  }
+
   return (
     <section className="mt-6">
       <div className="mx-auto max-w-lg bg-[#F7DEDD] rounded-sm py-5 px-6 text-center relative">
@@ -17,7 +50,7 @@ export default function TopFiveSection() {
       </div>
 
       <div>
-        <TopFiveCarousel />
+        <TopFiveCarousel items={items} />
       </div>
     </section>
   )

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import CakeCard from './CakeCard'
 
-type Cake = {
+export type Cake = {
   shopName: string
   rating: number
   productName: string
@@ -9,52 +9,9 @@ type Cake = {
   imageUrl: string
 }
 
-export default function TopFiveCarousel({ items }: { items?: Cake[] }) {
-  const defaultItems: Cake[] = items ?? [
-    {
-      shopName: '베리케이크',
-      rating: 4.8,
-      productName: '레드벨벳 케이크',
-      price: 25000,
-      imageUrl:
-        'https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?q=80&w=1000&auto=format&fit=crop', // red velvet cake
-    },
-    {
-      shopName: '슈가하우스',
-      rating: 4.7,
-      productName: '티라미수 케이크',
-      price: 22000,
-      imageUrl:
-        'https://images.unsplash.com/photo-1542326237-94b1c5a538d4?q=80&w=1000&auto=format&fit=crop',
-    },
-    {
-      shopName: '밀크앤베리',
-      rating: 4.6,
-      productName: '초코 무스 케이크',
-      price: 27000,
-      imageUrl:
-        'https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1000&auto=format&fit=crop', // chocolate cake
-    },
-    {
-      shopName: '허니베이커',
-      rating: 4.5,
-      productName: '치즈 케이크',
-      price: 23000,
-      imageUrl:
-        'https://images.unsplash.com/photo-1565958011703-44f9829ba187?q=80&w=1000&auto=format&fit=crop', // cheesecake
-    },
-    {
-      shopName: '블룸베이커리',
-      rating: 4.4,
-      productName: '과일 생크림 케이크',
-      price: 30000,
-      imageUrl:
-        'https://images.unsplash.com/photo-1621303837174-89787a7d4729?q=80&w=1000&auto=format&fit=crop', // fruit cream cake
-    },
-  ]
+export default function TopFiveCarousel({ items }: { items: Cake[] }) {
+  const len = items.length
 
-  const slides = items && items.length > 0 ? items : defaultItems
-  const len = slides.length
   const [index, setIndex] = useState(0)
   const timerRef = useRef<number | null>(null)
   const [likedMap, setLikedMap] = useState<Record<number, boolean>>({})
@@ -79,7 +36,7 @@ export default function TopFiveCarousel({ items }: { items?: Cake[] }) {
             pl-[calc(50%-130px)] pr-[calc(50%-130px)]"
           style={{ transform: `translateX(-${index * (SLIDE_WIDTH + GAP)}px)` }}
         >
-          {slides.map((s, i) => (
+          {items.map((s, i) => (
             <div
               key={i}
               className="w-[260px] h-[220px] flex-shrink-0 flex items-center justify-center"
