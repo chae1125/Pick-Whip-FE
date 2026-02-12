@@ -32,7 +32,7 @@ export const getNotifications = async (params: {
   cursor?: number
   size?: number
 }) => {
-  const res = await instance.get<NotificationListResponse>('/api/notifications', {
+  const res = await instance.get<NotificationListResponse>('/notifications', {
     params,
   })
 
@@ -48,7 +48,7 @@ type ReadOneResponse = {
 }
 
 export const patchNotificationRead = async (notificationId: number) => {
-  const res = await instance.patch<ReadOneResponse>(`/api/notifications/${notificationId}/read`)
+  const res = await instance.patch<ReadOneResponse>(`/notifications/${notificationId}/read`)
   return res.data
 }
 
@@ -61,14 +61,14 @@ type CommonResponse<T = unknown> = {
 }
 
 export const patchNotificationsReadAll = async () => {
-  const res = await instance.patch<CommonResponse<null>>('/api/notifications/read-all')
+  const res = await instance.patch<CommonResponse<null>>('/notifications/read-all')
   return res.data
 }
 
 export const getUnreadCount = async (): Promise<number> => {
   const res = await instance.get<{
     result: { unread: number }
-  }>('/api/notifications/unread')
+  }>('/notifications/unread')
 
   return res.data.result.unread
 }
