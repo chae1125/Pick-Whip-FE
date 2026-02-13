@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import BackHeader from '@/components/BackHeader'
 
-import type { NotificationItem, NotificationTabKey, NotificationTab } from '../types/notification'
 import Badge from '../components/notification/Badge'
 import NotificationCard from '../components/notification/NotificationCard'
 
@@ -9,8 +8,12 @@ import {
   getNotifications,
   patchNotificationRead,
   patchNotificationsReadAll,
+  getUnreadCount,
 } from '@/apis/notification'
-import type { NotificationResponseItem, NotificationType } from '@/apis/notification'
+import type { NotificationType, Notification } from '@/apis/notification'
+
+type NotificationTabKey = 'all' | 'order' | 'review' | 'etc'
+type NotificationTab = { key: NotificationTabKey; label: string }
 
 const TABS: NotificationTab[] = [
   { key: 'all', label: '전체' },
@@ -24,33 +27,20 @@ const toServerType = (tab: NotificationTabKey): NotificationType | undefined => 
   return tab.toUpperCase() as NotificationType
 }
 
-const toTimeAgo = (dateStr: string) => {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const created = new Date(y, m - 1, d)
-  const diff = Date.now() - created.getTime()
-
-  const min = Math.floor(diff / (1000 * 60))
-  if (min < 60) return `${Math.max(1, min)}분 전`
-
-  const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr}시간 전`
-
-  const day = Math.floor(hr / 24)
-  return `${day}일 전`
+const toTabKeyFromServerType = (type: Notification['type']): Exclude<NotificationTabKey, 'all'> => {
+  return type.toLowerCase() as Exclude<NotificationTabKey, 'all'>
 }
-
-const mapNotification = (n: NotificationResponseItem): NotificationItem => ({
-  id: n.notificationId,
-  type: n.type.toLowerCase() as NotificationItem['type'],
-  title: n.title,
-  body: n.content,
-  timeAgo: toTimeAgo(n.createdDate),
-  read: n.isRead,
-})
 
 export default function NotificationPage() {
   const [tab, setTab] = useState<NotificationTabKey>('all')
-  const [items, setItems] = useState<NotificationItem[]>([])
+  const [items, setItems] = useState<Notification[]>([])
+
+  const [counts, setCounts] = useState<Record<NotificationTabKey, number>>({
+    all: 0,
+    order: 0,
+    review: 0,
+    etc: 0,
+  })
 
   const cursorRef = useRef<number | null>(null)
   const hasNextRef = useRef(true)
@@ -64,6 +54,37 @@ export default function NotificationPage() {
 
   const isEmpty = !initialLoading && items.length === 0
 
+  const fetchTotalUnreadCount = useCallback(async () => {
+    try {
+      const count = await getUnreadCount()
+      setCounts((prev) => ({ ...prev, all: count }))
+    } catch (error) {
+      console.error('Failed to fetch unread count', error)
+    }
+  }, [])
+
+  const updateTabCountsFromList = useCallback((list: Notification[]) => {
+    const byType: Record<Exclude<NotificationTabKey, 'all'>, number> = {
+      order: 0,
+      review: 0,
+      etc: 0,
+    }
+
+    list.forEach((it) => {
+      if (!it.isRead) {
+        const key = toTabKeyFromServerType(it.type)
+        byType[key] += 1
+      }
+    })
+
+    setCounts((prev) => ({
+      ...prev,
+      order: byType.order,
+      review: byType.review,
+      etc: byType.etc,
+    }))
+  }, [])
+
   const fetchNotifications = useCallback(
     async (isReset = false) => {
       if (loadingRef.current) return
@@ -71,10 +92,7 @@ export default function NotificationPage() {
 
       loadingRef.current = true
       setLoading(true)
-
-      if (isReset) {
-        setInitialLoading(true)
-      }
+      if (isReset) setInitialLoading(true)
 
       try {
         const res = await getNotifications({
@@ -83,10 +101,14 @@ export default function NotificationPage() {
           size: 20,
         })
 
-        const mapped = res.notifications.map(mapNotification)
-        const nextHasNext = mapped.length > 0 ? res.hasNext : false
+        const fetched = res.notifications as Notification[]
+        const nextHasNext = fetched.length > 0 ? res.hasNext : false
 
-        setItems((prev) => (isReset ? mapped : [...prev, ...mapped]))
+        setItems((prev) => (isReset ? fetched : [...prev, ...fetched]))
+
+        if (tab === 'all' && isReset) {
+          updateTabCountsFromList(fetched)
+        }
 
         cursorRef.current = res.nextCursor
         hasNextRef.current = nextHasNext
@@ -96,13 +118,15 @@ export default function NotificationPage() {
       } finally {
         loadingRef.current = false
         setLoading(false)
-        if (isReset) {
-          setInitialLoading(false)
-        }
+        if (isReset) setInitialLoading(false)
       }
     },
-    [tab],
+    [tab, updateTabCountsFromList],
   )
+
+  useEffect(() => {
+    fetchTotalUnreadCount()
+  }, [fetchTotalUnreadCount])
 
   useEffect(() => {
     const el = loadMoreRef.current
@@ -130,42 +154,51 @@ export default function NotificationPage() {
     fetchNotifications(true)
   }, [tab, fetchNotifications])
 
-  const counts = useMemo(() => {
-    const by: Record<NotificationTabKey, number> = { all: 0, order: 0, review: 0, etc: 0 }
-    items.forEach((it) => {
-      if (!it.read) {
-        by.all += 1
-        by[it.type] += 1
-      }
-    })
-    return by
-  }, [items])
-
-  const filtered = useMemo(() => {
-    if (tab === 'all') return items
-    return items.filter((it) => it.type === tab)
-  }, [items, tab])
-
   const markAllRead = async () => {
-    const hasUnread = items.some((it) => !it.read)
+    const hasUnread = items.some((it) => !it.isRead)
     if (!hasUnread) return
+
     const prevItems = items
-    setItems((prev) => prev.map((it) => ({ ...it, read: true })))
+
+    setItems((prev) => prev.map((it) => ({ ...it, isRead: true })))
+    setCounts({ all: 0, order: 0, review: 0, etc: 0 })
+
     try {
       await patchNotificationsReadAll()
     } catch {
       setItems(prevItems)
+      fetchTotalUnreadCount()
+      fetchNotifications(true)
     }
   }
 
-  const handleRead = async (id: number) => {
-    const alreadyRead = items.find((i) => i.id === id)?.read
-    if (alreadyRead) return
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, read: true } : it)))
+  const handleRead = async (notificationId: number) => {
+    const targetItem = items.find((i) => i.notificationId === notificationId)
+    if (!targetItem || targetItem.isRead) return
+
+    setItems((prev) =>
+      prev.map((it) => (it.notificationId === notificationId ? { ...it, isRead: true } : it)),
+    )
+
+    const tabKey = toTabKeyFromServerType(targetItem.type)
+
+    setCounts((prev) => ({
+      ...prev,
+      all: Math.max(0, prev.all - 1),
+      [tabKey]: Math.max(0, prev[tabKey] - 1),
+    }))
+
     try {
-      await patchNotificationRead(id)
+      await patchNotificationRead(notificationId)
     } catch {
-      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, read: false } : it)))
+      setItems((prev) =>
+        prev.map((it) => (it.notificationId === notificationId ? { ...it, isRead: false } : it)),
+      )
+      setCounts((prev) => ({
+        ...prev,
+        all: prev.all + 1,
+        [tabKey]: prev[tabKey] + 1,
+      }))
     }
   }
 
@@ -183,7 +216,6 @@ export default function NotificationPage() {
           <div className="flex flex-1">
             {TABS.map((t) => {
               const active = tab === t.key
-              const cnt = counts[t.key]
               return (
                 <button
                   key={t.key}
@@ -193,7 +225,7 @@ export default function NotificationPage() {
                 >
                   <span className={active ? 'text-[var(--color-main-pink-200)]' : 'text-[#2B2B2B]'}>
                     {t.label}
-                    <Badge count={cnt} active={active} />
+                    <Badge count={counts[t.key]} active={active} />
                   </span>
                   {active && (
                     <span className="absolute left-0 right-0 -bottom-[1px] mx-auto h-[2px] w-full rounded-full bg-[#E85C5C]" />
@@ -221,8 +253,14 @@ export default function NotificationPage() {
               <div className="py-16 text-center text-[13px] text-gray-400">알림이 없습니다</div>
             ) : (
               <>
-                {filtered.map((item) => (
-                  <NotificationCard key={item.id} item={item} onClick={handleRead} />
+                {items.map((item) => (
+                  <NotificationCard
+                    key={item.notificationId}
+                    item={{
+                      ...item,
+                    }}
+                    onClick={handleRead}
+                  />
                 ))}
 
                 {hasNext && !initialLoading && <div ref={loadMoreRef} className="h-10 w-full" />}
