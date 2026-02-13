@@ -54,3 +54,10 @@ export async function saveExtraInfo(userId: number, body: SaveExtraInfoBody): Pr
     throw new Error(res.data.message ?? '추가 정보 저장 실패')
   }
 }
+
+export const logout = async (userId: number) => {
+  const res = await axios.post('/users/logout', null, {
+    params: { userId },
+  })
+  return res.data
+}
