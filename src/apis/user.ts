@@ -30,3 +30,34 @@ export async function getMe(userId: number): Promise<MeResult> {
 
   return res.data.result
 }
+
+type SaveExtraInfoBody = {
+  name: string
+  phone: string
+  birthdate: string
+}
+
+type SaveExtraInfoResponse = {
+  isSuccess: boolean
+  code: string
+  message: string
+  result?: string
+  success?: boolean
+}
+
+export async function saveExtraInfo(userId: number, body: SaveExtraInfoBody): Promise<void> {
+  const res = await axios.post<SaveExtraInfoResponse>('/users/extra/info', body, {
+    params: { userId },
+  })
+
+  if (!res.data.isSuccess) {
+    throw new Error(res.data.message ?? '추가 정보 저장 실패')
+  }
+}
+
+export const logout = async (userId: number) => {
+  const res = await axios.post('/users/logout', null, {
+    params: { userId },
+  })
+  return res.data
+}

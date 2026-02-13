@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Logo from '../assets/logo/logo.svg'
 import {
   Bell,
@@ -11,11 +11,12 @@ import {
   Settings,
   LogOut,
   ShoppingBag,
+  User,
 } from 'lucide-react'
 import { HamburgerButton } from './HamburgerButton'
-import { useNavigate } from 'react-router-dom'
-import { getMe } from '@/apis/user'
+import { getMe, logout } from '@/apis/user'
 import { getUnreadCount } from '@/apis/notification'
+import { getUserIdFromToken } from '@/utils/auth'
 
 export function Header() {
   const navigate = useNavigate()
@@ -38,6 +39,30 @@ export function Header() {
   }
   const close = () => setIsOpen(false)
   const toggle = () => (isMounted && isOpen ? close() : open())
+
+  const handleLogout = async () => {
+    const userId = getUserIdFromToken()
+
+    if (userId) {
+      try {
+        await logout(userId)
+      } catch (error) {
+        console.error('로그아웃 API 호출 실패:', error)
+      }
+    }
+
+    localStorage.removeItem('accessToken')
+    setMe(null)
+    close()
+    navigate('/auth/login')
+  }
+
+  const handleProfileClick = () => {
+    if (!me) {
+      close()
+      navigate('/auth/login')
+    }
+  }
 
   useEffect(() => {
     if (isMounted && !isOpen) {
@@ -62,7 +87,12 @@ export function Header() {
     if (!isMounted) return
     if (me) return
 
-    getMe(1)
+    const userId = getUserIdFromToken()
+    if (!userId) {
+      return
+    }
+
+    getMe(userId)
       .then((data) => {
         setMe({
           nickname: data.nickname,
@@ -96,7 +126,7 @@ export function Header() {
           ${isHome || isOrderDetail ? 'border-b border-[#F4D3D3]' : ''}
         `}
       >
-        <img src={Logo} alt="Pick & Whip" className="site-logo" />
+        <img src={Logo} alt="Pick & Whip" className="site-logo" onClick={() => navigate('/')} />
         <div className="flex items-center gap-3">
           <button
             className="rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100"
@@ -136,12 +166,35 @@ export function Header() {
             ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
             aria-label="내비게이션 드로어"
           >
-            <div className="flex h-14 items-center justify-between bg-[#F4D3D3] px-4">
+            <div
+              className="flex h-14 items-center justify-between bg-[#F4D3D3] px-4 cursor-pointer hover:bg-[#ecc3c3] transition-colors"
+              onClick={handleProfileClick}
+            >
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gray-200" />
+                {me?.profileImageUrl ? (
+                  <img
+                    src={me.profileImageUrl}
+                    alt="프로필"
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white">
+                    <User size={20} />
+                  </div>
+                )}
+
                 <div>
-                  <p className="!text-[14px] !text-white">{me?.nickname ?? '...'}</p>
-                  <p className="!text-[12.5px] !text-white/70">{me?.email ?? ''}</p>
+                  {me ? (
+                    <>
+                      <p className="!text-[14px] !font-semibold !text-white">{me.nickname}</p>
+                      <p className="!text-[12.5px] !text-white/80">{me.email}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="!text-[14px] !font-bold !text-white">로그인이 필요합니다</p>
+                      <p className="!text-[11px] !text-white/70">로그인 하러가기 &gt;</p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -196,7 +249,7 @@ export function Header() {
                     navigate('/setting')
                   }}
                 />
-                <DrawerItem icon={<LogOut size={18} />} title="로그아웃" onClick={close} />
+                <DrawerItem icon={<LogOut size={18} />} title="로그아웃" onClick={handleLogout} />
               </ul>
             </div>
 

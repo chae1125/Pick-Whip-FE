@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Locate } from 'lucide-react'
 
 import { SearchInput } from '../components/input/SearchInput'
@@ -43,6 +44,8 @@ const PROMO_ITEMS = [
 
 export default function Home() {
   const shopId = 2 // 지금은 임시
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
 
   const [keyword, setKeyword] = useState('')
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -91,6 +94,14 @@ export default function Home() {
     () => '다가오는 크리스마스,\n마음에 쏙 드는 선물을 찾아보세요!',
     [],
   )
+
+  useEffect(() => {
+    const token = params.get('accessToken')
+    if (token) {
+      localStorage.setItem('accessToken', token)
+      navigate('/', { replace: true })
+    }
+  }, [params, navigate])
 
   const fetchGallery = useCallback(async () => {
     setLoading(true)
