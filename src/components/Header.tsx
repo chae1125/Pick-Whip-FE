@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Logo from '../assets/logo/logo.svg'
 import {
   Bell,
@@ -11,9 +11,9 @@ import {
   Settings,
   LogOut,
   ShoppingBag,
+  User,
 } from 'lucide-react'
 import { HamburgerButton } from './HamburgerButton'
-import { useNavigate } from 'react-router-dom'
 import { getMe, logout } from '@/apis/user'
 import { getUnreadCount } from '@/apis/notification'
 import { getUserIdFromToken } from '@/utils/auth'
@@ -52,9 +52,16 @@ export function Header() {
     }
 
     localStorage.removeItem('accessToken')
-
+    setMe(null)
     close()
-    navigate('/login')
+    navigate('/auth/login')
+  }
+
+  const handleProfileClick = () => {
+    if (!me) {
+      close()
+      navigate('/auth/login')
+    }
   }
 
   useEffect(() => {
@@ -81,7 +88,9 @@ export function Header() {
     if (me) return
 
     const userId = getUserIdFromToken()
-    if (!userId) return
+    if (!userId) {
+      return
+    }
 
     getMe(userId)
       .then((data) => {
@@ -157,12 +166,35 @@ export function Header() {
             ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
             aria-label="내비게이션 드로어"
           >
-            <div className="flex h-14 items-center justify-between bg-[#F4D3D3] px-4">
+            <div
+              className="flex h-14 items-center justify-between bg-[#F4D3D3] px-4 cursor-pointer hover:bg-[#ecc3c3] transition-colors"
+              onClick={handleProfileClick}
+            >
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gray-200" />
+                {me?.profileImageUrl ? (
+                  <img
+                    src={me.profileImageUrl}
+                    alt="프로필"
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white">
+                    <User size={20} />
+                  </div>
+                )}
+
                 <div>
-                  <p className="!text-[14px] !text-white">{me?.nickname ?? '...'}</p>
-                  <p className="!text-[12.5px] !text-white/70">{me?.email ?? ''}</p>
+                  {me ? (
+                    <>
+                      <p className="!text-[14px] !font-semibold !text-white">{me.nickname}</p>
+                      <p className="!text-[12.5px] !text-white/80">{me.email}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="!text-[14px] !font-bold !text-white">로그인이 필요합니다</p>
+                      <p className="!text-[11px] !text-white/70">로그인 하러가기 &gt;</p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
