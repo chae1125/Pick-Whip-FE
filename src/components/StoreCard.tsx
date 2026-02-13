@@ -9,6 +9,7 @@ interface StoreCardProps {
   distance: number
   minprice: number
   maxprice: number
+  onClick?: () => void
 }
 
 export default function StoreCard({
@@ -18,9 +19,13 @@ export default function StoreCard({
   distance,
   minprice,
   maxprice,
+  onClick,
 }: StoreCardProps) {
   return (
-    <div className="flex px-3 pt-3 flex-col rounded-[10px] bg-[#FFFFFF] w-full h-62 items-center shadow-lg gap-3">
+    <div
+      onClick={onClick}
+      className="flex px-3 pt-3 flex-col rounded-[10px] bg-[#FFFFFF] w-full h-62 items-center shadow-lg gap-3"
+    >
       <img src={example} alt="" className="items-center object-cover w-full h-25 rounded-[10px]" />
       <div className="flex flex-col w-full mt-2">
         <div className="flex flex-row gap-1 mb-3">

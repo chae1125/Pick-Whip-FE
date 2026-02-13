@@ -42,7 +42,7 @@ export default function CakeCardTile({ item, onClick, onToggleLike }: Props) {
           <div className="mt-1.5 flex flex-wrap gap-1">
             {item.keywords.slice(0, 3).map((tag) => (
               <span
-                key={`${item.id}-${tag}`}
+                key={`${item.designId}-${tag}`}
                 className="inline-flex items-center rounded-full border border-[#BA8675] px-2 py-[2px] text-[8px] font-semibold text-[#BA8675]"
               >
                 {tag}

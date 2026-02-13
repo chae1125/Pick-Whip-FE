@@ -1,7 +1,7 @@
 import { Heart } from 'lucide-react'
 
 type CakeCardProps = {
-  imageUrl: string
+  imageUrl?: string | null
   isLiked?: boolean
   onToggleLike?: () => void
 
@@ -21,15 +21,23 @@ export default function CakeCard({
   likeOffsetPx = { bottom: 56, right: 56 },
   likeIconInsetPx = { bottom: 60, right: 60 },
 }: CakeCardProps) {
+  const src = imageUrl?.trim() ? imageUrl.trim() : null
+
   return (
     <div className="group relative w-full overflow-hidden rounded-[10px] rounded-br-none bg-white p-1 shadow-md transition-transform hover:shadow-md">
       <div className="relative aspect-square w-full overflow-hidden rounded-[10px]">
-        <img
-          src={imageUrl}
-          alt=""
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          draggable={false}
-        />
+        {src ? (
+          <img
+            src={src}
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            draggable={false}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-[#F3F4F6] text-[12px] text-[#57504F]">
+            이미지가 없습니다.
+          </div>
+        )}
 
         <button
           type="button"

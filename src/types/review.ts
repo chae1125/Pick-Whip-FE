@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { ReviewKeyword } from '@/apis/shop'
 
 // 리뷰 태그
 export type ReviewTag = {
@@ -24,8 +25,8 @@ export type ReviewCardData = {
   content: string
 
   imageUrls?: string[]
-  tags?: ReviewTag[]
-  extraTagCount?: number
+  keywords?: ReviewKeyword[]
+  max?: number
   helpfulCount?: number
 
   ownerReply?: ReviewOwnerReply

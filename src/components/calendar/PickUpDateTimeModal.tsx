@@ -1,11 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import PickUpCalendar from './PickUpCalendar'
 import FilterChipsGroup from '../FilterChipsGroup'
+import { getShopCalendar, getShopSlots } from '@/apis/calendar'
+
+type ChipOption = { value: string; label: string; disabled?: boolean }
 
 type Props = {
   open: boolean
   onClose: () => void
+  shopId?: number
   disablePast?: boolean
   minDate?: Date
   initialMonth?: Date
@@ -14,25 +18,22 @@ type Props = {
   timeRange?: string | null
 }
 
-const AM_OPTIONS = [
-  { value: '10:00~10:30', label: '10:00~10:30' },
-  { value: '10:30~11:00', label: '10:30~11:00' },
-  { value: '11:00~11:30', label: '11:00~11:30' },
-  { value: '11:30~12:00', label: '11:30~12:00' },
-]
+function toYmd(d: Date) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
-const PM_OPTIONS = [
-  { value: '12:00~12:30', label: '12:00~12:30' },
-  { value: '12:30~13:00', label: '12:30~13:00' },
-  { value: '13:00~13:30', label: '13:00~13:30' },
-  { value: '13:30~14:00', label: '13:30~14:00' },
-  { value: '14:00~14:30', label: '14:00~14:30' },
-  { value: '14:30~15:00', label: '14:30~15:00' },
-]
+function isAM(rangeLabel: string) {
+  const hh = Number(rangeLabel.slice(0, 2))
+  return Number.isFinite(hh) && hh < 12
+}
 
 export default function PickUpDateTimeModal({
   open,
   onClose,
+  shopId: shopIdProp,
   disablePast = true,
   minDate,
   initialMonth,
@@ -40,15 +41,20 @@ export default function PickUpDateTimeModal({
   value,
   timeRange,
 }: Props) {
+  const shopId = shopIdProp ?? 1
+
   const resetKey = useMemo(
-    () => `${value?.toISOString() ?? 'null'}|${timeRange ?? 'null'}`,
-    [value, timeRange],
+    () => `${shopId}|${value?.toISOString() ?? 'null'}|${timeRange ?? 'null'}`,
+    [shopId, value, timeRange],
   )
 
-  return open ? (
+  if (!open) return null
+
+  return (
     <PickUpDateTimeModalInner
       key={resetKey}
       onClose={onClose}
+      shopId={shopId}
       disablePast={disablePast}
       minDate={minDate}
       initialMonth={initialMonth}
@@ -56,13 +62,14 @@ export default function PickUpDateTimeModal({
       value={value}
       timeRange={timeRange}
     />
-  ) : null
+  )
 }
 
-type InnerProps = Omit<Props, 'open'>
+type InnerProps = Omit<Props, 'open' | 'shopId'> & { shopId: number }
 
 function PickUpDateTimeModalInner({
   onClose,
+  shopId,
   disablePast = true,
   minDate,
   initialMonth,
@@ -73,9 +80,88 @@ function PickUpDateTimeModalInner({
   const [selectedDate, setSelectedDate] = useState<Date | null>(value ?? null)
   const [selectedTime, setSelectedTime] = useState<string[]>(timeRange ? [timeRange] : [])
 
+  const base = initialMonth ?? selectedDate ?? value ?? new Date()
+  const [viewYear, setViewYear] = useState(base.getFullYear())
+  const [viewMonth, setViewMonth] = useState(base.getMonth() + 1)
+
+  const [closedDateSet, setClosedDateSet] = useState<Set<string>>(new Set())
+
+  const [amOptions, setAmOptions] = useState<ChipOption[]>([])
+  const [pmOptions, setPmOptions] = useState<ChipOption[]>([])
+
   const handleSingle = (next: string[]) => {
     setSelectedTime(next.length ? [next[next.length - 1]] : [])
   }
+
+  useEffect(() => {
+    let alive = true
+    const run = async () => {
+      try {
+        const data = await getShopCalendar(shopId, viewYear, viewMonth)
+        const set = new Set<string>()
+        for (const item of data.result ?? []) {
+          if (item.closed) set.add(item.date)
+        }
+        if (alive) setClosedDateSet(set)
+
+        if (alive && selectedDate && set.has(toYmd(selectedDate))) {
+          setSelectedDate(null)
+          setSelectedTime([])
+        }
+      } catch {
+        if (alive) setClosedDateSet(new Set())
+      }
+    }
+    run()
+    return () => {
+      alive = false
+    }
+  }, [shopId, viewYear, viewMonth])
+
+  useEffect(() => {
+    const run = async () => {
+      if (!selectedDate) {
+        setAmOptions([])
+        setPmOptions([])
+        return
+      }
+
+      if (closedDateSet.has(toYmd(selectedDate))) {
+        setAmOptions([])
+        setPmOptions([])
+        setSelectedTime([])
+        return
+      }
+
+      try {
+        const dateStr = toYmd(selectedDate)
+        const data = await getShopSlots(shopId, dateStr)
+        const r = data.result
+        const nextClosed = !!r.closed
+
+        const mapped: ChipOption[] = (r.slots ?? []).map((s) => ({
+          value: s.timeLabel ?? s.time,
+          label: s.timeLabel ?? s.time,
+          disabled: !s.available || nextClosed,
+        }))
+
+        setAmOptions(mapped.filter((o) => isAM(o.value)))
+        setPmOptions(mapped.filter((o) => !isAM(o.value)))
+
+        if (selectedTime.length === 1) {
+          const cur = selectedTime[0]
+          const ok = mapped.some((x) => x.value === cur && !x.disabled)
+          if (!ok) setSelectedTime([])
+        }
+      } catch {
+        setAmOptions([])
+        setPmOptions([])
+        setSelectedTime([])
+      }
+    }
+
+    run()
+  }, [shopId, selectedDate, closedDateSet])
 
   const canConfirm = Boolean(selectedDate && selectedTime.length === 1)
 
@@ -110,20 +196,25 @@ function PickUpDateTimeModalInner({
                   disablePast={disablePast}
                   minDate={minDate}
                   initialMonth={initialMonth ?? selectedDate ?? value ?? undefined}
+                  disabledDateSet={closedDateSet}
+                  onViewChange={(y, m) => {
+                    setViewYear(y)
+                    setViewMonth(m)
+                  }}
                 />
               </div>
 
               <div className="px-4 pt-5">
                 <FilterChipsGroup
                   title="오전"
-                  options={AM_OPTIONS}
+                  options={amOptions}
                   value={selectedTime}
                   onChange={handleSingle}
                 />
                 <div className="h-5" />
                 <FilterChipsGroup
                   title="오후"
-                  options={PM_OPTIONS}
+                  options={pmOptions}
                   value={selectedTime}
                   onChange={handleSingle}
                 />
