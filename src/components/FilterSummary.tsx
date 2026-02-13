@@ -59,6 +59,12 @@ interface FilterSummaryProps {
   onChipsClick?: (key: string) => void
 }
 
+interface FilterChipItem {
+  key: string
+  id: string
+  text: string
+}
+
 export default function FilterSummary({
   filters,
   regionOptions,
@@ -66,19 +72,30 @@ export default function FilterSummary({
   priceRange,
   onChipsClick,
 }: FilterSummaryProps) {
-  const regionLabel = useMemo(() => {
+  const regionChips = useMemo<FilterChipItem[]>(() => {
     if (filters.hotspots.length > 0) {
       const selectedRegion = filters.regions[0]
       const options = hotspotOptions[selectedRegion] || []
-      return formatLabel(filters.hotspots, options)
+
+      return filters.hotspots.map((hotspot) => ({
+        key: 'region',
+        id: `hotspot-${hotspot}`,
+        text: getLabel(hotspot, options),
+      }))
     }
+
     if (filters.regions.length > 0) {
-      return formatLabel(filters.regions, regionOptions)
+      return filters.regions.map((region) => ({
+        key: 'region',
+        id: `region-${region}`,
+        text: getLabel(region, regionOptions),
+      }))
     }
-    return null
+
+    return []
   }, [filters.regions, filters.hotspots, regionOptions, hotspotOptions])
 
-  const styleLabel = useMemo(() => {
+  const styleChip = useMemo<FilterChipItem | null>(() => {
     const allStyleValues = [
       ...filters.designStyles,
       ...filters.shapes,
@@ -89,36 +106,47 @@ export default function FilterSummary({
 
     if (allStyleValues.length === 0) return null
 
-    return formatLabel(allStyleValues, [])
+    return {
+      key: 'style',
+      id: 'style-summary',
+      text: formatLabel(allStyleValues, []),
+    }
   }, [filters])
 
-  const purposeLabel = useMemo(() => {
-    return formatLabel(filters.purpose, PURPOSE_OPTIONS)
+  const purposeChip = useMemo<FilterChipItem | null>(() => {
+    if (filters.purpose.length === 0) return null
+    return {
+      key: 'purpose',
+      id: 'purpose-summary',
+      text: formatLabel(filters.purpose, PURPOSE_OPTIONS),
+    }
   }, [filters.purpose])
 
-  const priceLabel = useMemo(() => {
-    return `${priceRange.min.toLocaleString()}원 ~ ${priceRange.max.toLocaleString()}원`
+  const priceChip = useMemo<FilterChipItem | null>(() => {
+    if (priceRange.min === 0 && priceRange.max === 200000) return null
+    return {
+      key: 'price',
+      id: 'price-summary',
+      text: `${priceRange.min.toLocaleString()}원 ~ ${priceRange.max.toLocaleString()}원`,
+    }
   }, [priceRange])
 
-  const chips = [
-    { key: 'region', text: regionLabel, active: !!regionLabel },
-    { key: 'style', text: styleLabel, active: !!styleLabel },
-    { key: 'purpose', text: purposeLabel, active: !!purposeLabel },
-    { key: 'price', text: priceLabel, active: priceRange.min !== 0 || priceRange.max !== 200000 },
-  ].filter((c) => c.active)
+  const allChips = [...regionChips, styleChip, purposeChip, priceChip].filter(
+    (chip): chip is FilterChipItem => chip !== null,
+  )
 
   return (
-    <div className="flex gap-2 overflow-x-auto py-1.5 no-scrollbar items-center">
-      {chips.map((chip) => (
-        <div
-          key={chip.key}
-          className="flex-shrink-0 bg-white border border-gray-200 rounded-full px-3 py-1.5 shadow-[0_2px_4px_rgba(0,0,0,0.05)] cursor-pointer active:bg-gray-50 transition-colors"
+    <div className="flex gap-2 overflow-x-auto py-1.5 scrollbar-hide items-center">
+      {allChips.map((chip) => (
+        <button
+          key={chip.id}
           onClick={() => onChipsClick?.(chip.key)}
+          className="flex-shrink-0 bg-white border border-gray-200 rounded-full px-3 py-1.5 shadow-[0_2px_4px_rgba(0,0,0,0.05)] active:bg-gray-50 transition-colors"
         >
           <span className="text-[14px] font-medium text-[#0A0A0A] whitespace-nowrap">
             {chip.text}
           </span>
-        </div>
+        </button>
       ))}
     </div>
   )
@@ -128,12 +156,15 @@ function convertToKorean(value: string) {
   return KOREAN_MAP[value] || value
 }
 
+function getLabel(value: string, options: ChipOption[]) {
+  return options.find((o) => o.value === value)?.label || convertToKorean(value)
+}
+
 function formatLabel(selectedValues: string[], options: ChipOption[]) {
-  if (selectedValues.length === 0) return null
+  if (selectedValues.length === 0) return ''
 
   const firstValue = selectedValues[0]
-  const firstLabel =
-    options.find((o) => o.value === firstValue)?.label || convertToKorean(firstValue)
+  const firstLabel = getLabel(firstValue, options)
 
   if (selectedValues.length === 1) {
     return firstLabel

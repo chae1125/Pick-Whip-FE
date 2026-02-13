@@ -199,7 +199,6 @@ export default function Map() {
                       onChange={(newHotspots) =>
                         setTempFilters((prev) => ({ ...prev, hotspots: newHotspots }))
                       }
-                      multiple={false}
                     />
                   </div>
                 )}
