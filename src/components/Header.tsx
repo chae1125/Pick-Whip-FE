@@ -14,8 +14,9 @@ import {
 } from 'lucide-react'
 import { HamburgerButton } from './HamburgerButton'
 import { useNavigate } from 'react-router-dom'
-import { getMe } from '@/apis/user'
+import { getMe, logout } from '@/apis/user'
 import { getUnreadCount } from '@/apis/notification'
+import { getUserIdFromToken } from '@/utils/auth'
 
 export function Header() {
   const navigate = useNavigate()
@@ -38,6 +39,23 @@ export function Header() {
   }
   const close = () => setIsOpen(false)
   const toggle = () => (isMounted && isOpen ? close() : open())
+
+  const handleLogout = async () => {
+    const userId = getUserIdFromToken()
+
+    if (userId) {
+      try {
+        await logout(userId)
+      } catch (error) {
+        console.error('로그아웃 API 호출 실패:', error)
+      }
+    }
+
+    localStorage.removeItem('accessToken')
+
+    close()
+    navigate('/login')
+  }
 
   useEffect(() => {
     if (isMounted && !isOpen) {
@@ -62,7 +80,10 @@ export function Header() {
     if (!isMounted) return
     if (me) return
 
-    getMe(1)
+    const userId = getUserIdFromToken()
+    if (!userId) return
+
+    getMe(userId)
       .then((data) => {
         setMe({
           nickname: data.nickname,
@@ -196,7 +217,7 @@ export function Header() {
                     navigate('/setting')
                   }}
                 />
-                <DrawerItem icon={<LogOut size={18} />} title="로그아웃" onClick={close} />
+                <DrawerItem icon={<LogOut size={18} />} title="로그아웃" onClick={handleLogout} />
               </ul>
             </div>
 
