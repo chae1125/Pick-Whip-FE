@@ -11,6 +11,7 @@ export default function SignupExtraPage() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [birthdate, setBirthdate] = useState('')
+  const [gender, setGender] = useState('') // Currently unused, but can be added later
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
@@ -26,8 +27,11 @@ export default function SignupExtraPage() {
     }
   }, [params, navigate])
 
+  const isPhoneValid = /^010\d{8}$/.test(phone)
+  const isBirthdateValid = /^\d{6}$/.test(birthdate)
+
   const canSave =
-    !isSaving && name.trim().length > 0 && phone.trim().length > 0 && birthdate.trim().length > 0
+    !isSaving && name.trim().length > 0 && isPhoneValid && isBirthdateValid && gender !== ''
 
   const handleSave = async () => {
     if (!canSave) return
@@ -35,9 +39,12 @@ export default function SignupExtraPage() {
     const userId = getUserIdFromToken()
     if (!userId) return alert('로그인이 필요합니다.')
 
+    const genderCode = gender === 'MALE' ? '1' : gender === 'FEMALE' ? '2' : '0'
+    const formattedBirthdate = birthdate.substring(2, 8) + genderCode
+
     try {
       setIsSaving(true)
-      await saveExtraInfo(userId, { name, phone, birthdate })
+      await saveExtraInfo(userId, { name, phone, birthdate: formattedBirthdate })
       navigate('/')
     } catch (e) {
       console.error(e)
@@ -63,7 +70,7 @@ export default function SignupExtraPage() {
         <p className="!mt-5 !text-[12.25px] !text-[#364153]">휴대폰 번호</p>
         <input
           value={phone}
-          placeholder="예: 01012345678"
+          placeholder="01012345678"
           onChange={(e) => setPhone(e.target.value)}
           className="!mt-3 w-full h-[43.33px] px-4 rounded-[8.75px] !text-[14px] !border-[0.67px] outline-none bg-white !border-[#D1D5DC] text-[#0A0A0A] placeholder:!text-[#9CA3AF] focus:!border-[#BA8675]"
         />
@@ -71,10 +78,32 @@ export default function SignupExtraPage() {
         <p className="!mt-5 !text-[12.25px] !text-[#364153]">생년월일</p>
         <input
           value={birthdate}
-          placeholder="예: 20000101 (형식은 백엔드 기준)"
+          placeholder="YYMMDD"
           onChange={(e) => setBirthdate(e.target.value)}
           className="!mt-3 w-full h-[43.33px] px-4 rounded-[8.75px] !text-[14px] !border-[0.67px] outline-none bg-white !border-[#D1D5DC] text-[#0A0A0A] placeholder:!text-[#9CA3AF] focus:!border-[#BA8675]"
         />
+
+        <p className="!mt-5 !text-[12.25px] !text-[#364153]">성별</p>
+        <div className="flex gap-2 mt-3">
+          {[
+            { label: '남성', value: 'MALE' },
+            { label: '여성', value: 'FEMALE' },
+            { label: '없음', value: 'NONE' },
+          ].map((item) => (
+            <button
+              key={item.value}
+              onClick={() => setGender(item.value)}
+              className={`flex-1 h-[43.33px] rounded-[8.75px] !text-[14px] border-[0.67px] transition-all
+                ${
+                  gender === item.value
+                    ? 'bg-[#57504F] text-white border-[#57504F]'
+                    : 'bg-white text-[#9CA3AF] border-[#D1D5DC]'
+                }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="container fixed bottom-0 left-0 right-0 bg-white">
