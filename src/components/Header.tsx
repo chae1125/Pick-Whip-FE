@@ -126,7 +126,7 @@ export function Header() {
           ${isHome || isOrderDetail ? 'border-b border-[#F4D3D3]' : ''}
         `}
       >
-        <img src={Logo} alt="Pick & Whip" className="site-logo" />
+        <img src={Logo} alt="Pick & Whip" className="site-logo" onClick={() => navigate('/')} />
         <div className="flex items-center gap-3">
           <button
             className="rounded-md p-1 text-[#0A0A0A] hover:bg-gray-100"
