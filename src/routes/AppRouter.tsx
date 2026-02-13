@@ -28,6 +28,7 @@ import NotificationPage from '@/pages/NotificationPage'
 import DraftsOrderPage from '@/pages/DraftsOrderPage'
 import OrderRequestListPage from '@/pages/OrderRequestListPage'
 import OrderCompleteListPage from '@/pages/OrderCompleteListPage'
+import SignupExtraPage from '@/pages/SignupExtraPage'
 
 const router = createBrowserRouter([
   {
@@ -81,6 +82,11 @@ const router = createBrowserRouter([
       { index: true, element: <SettingsPage /> },
       { path: 'edit-my-info', element: <EditMyInfoPage /> },
     ],
+  },
+  {
+    path: '/signup/extra',
+    element: <BlankLayout />,
+    children: [{ index: true, element: <SignupExtraPage /> }],
   },
   {
     path: '/drafts',
