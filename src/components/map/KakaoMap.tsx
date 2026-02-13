@@ -2,6 +2,9 @@
 import { useEffect, useRef, useState } from 'react'
 import myPickPinIcon from '../../assets/img/myPickPin.svg'
 
+import { BottomSheet } from '../BottomSheet'
+import ShopDetailPage from '@/pages/ShopDetailPage'
+
 interface MapProps {
   onBoundsChange?: (bounds: {
     lowLat: number
@@ -26,14 +29,24 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
   })
   const [isLoading, setIsLoading] = useState(true)
 
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [selectedShopId, setSelectedShopId] = useState<number | null>(null)
+
+  const closeSheet = () => {
+    setIsSheetOpen(false)
+    setSelectedShopId(null)
+  }
+
+  const openDetail = (shopId: number) => {
+    setSelectedShopId(shopId)
+    setIsSheetOpen(true)
+  }
+
   useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setMyLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          })
+          setMyLocation({ lat: position.coords.latitude, lng: position.coords.longitude })
           setIsLoading(false)
         },
         (error) => {
@@ -107,17 +120,23 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
     shopMarkersRef.current = []
 
     shops.forEach((shop) => {
-      const position = new kakao.maps.LatLng(shop.latitude, shop.longitude)
+      const idRaw = shop.shopId ?? shop.id
+      const shopId = Number(idRaw)
+      if (!Number.isFinite(shopId)) return
 
+      const position = new kakao.maps.LatLng(shop.latitude, shop.longitude)
       const showHeart = isMyPick && shop.isPicked
+      const overlayId = `shop-marker-${shopId}`
 
       const content = `
-        <div style="
+        <div id="${overlayId}" style="
           position: relative;
           display: flex; 
           flex-direction: column; 
           align-items: center;
           filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));
+          cursor: pointer;
+          pointer-events: auto;
         ">
           ${
             showHeart
@@ -127,8 +146,9 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
               top: -38px;
               z-index: 20;
               animation: bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+              pointer-events: none;
             ">
-              <img src="${myPickPinIcon}" width="45" height="55" alt="picked" />
+              <img src="${myPickPinIcon}" width="45" height="55" alt="picked" style="pointer-events:none;" />
             </div>
             `
               : ''
@@ -145,8 +165,9 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
             align-items: center; 
             margin-bottom: 5px;
             z-index: 10;
+            pointer-events: none;
           ">
-            <svg width="19" height="20" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="19" height="20" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="pointer-events:none;">
               <path d="M8.925 0C9.35 0.2125 10.2 1.615 10.2 2.55C10.2 3.485 9.6305 3.825 8.925 3.825C8.2195 3.825 7.65 3.6975 7.65 2.7625C7.65 1.8275 8.5 1.275 8.925 0ZM14.875 7.225C17 7.225 18.7 8.925 18.7 11.05C18.7 12.376 18.0285 13.5405 17 14.229V19.125H1.7V14.229C0.6715 13.5405 0 12.376 0 11.05C0 8.925 1.7 7.225 3.825 7.225H7.65V4.675H10.2V7.225H14.875ZM9.35 13.175C9.91359 13.175 10.4541 12.9511 10.8526 12.5526C11.2511 12.1541 11.475 11.6136 11.475 11.05H12.75C12.75 11.6136 12.9739 12.1541 13.3724 12.5526C13.7709 12.9511 14.3114 13.175 14.875 13.175C15.4386 13.175 15.9791 12.9511 16.3776 12.5526C16.7761 12.1541 17 11.6136 17 11.05C17 10.4864 16.7761 9.94591 16.3776 9.5474C15.9791 9.14888 15.4386 8.925 14.875 8.925H3.825C3.26142 8.925 2.72091 9.14888 2.3224 9.5474C1.92388 9.94591 1.7 10.4864 1.7 11.05C1.7 11.6136 1.92388 12.1541 2.3224 12.5526C2.72091 12.9511 3.26142 13.175 3.825 13.175C4.38859 13.175 4.92909 12.9511 5.3276 12.5526C5.72612 12.1541 5.95 11.6136 5.95 11.05H7.225C7.225 11.6136 7.44888 12.1541 7.8474 12.5526C8.24591 12.9511 8.78642 13.175 9.35 13.175Z" fill="${showHeart ? '#FF4D77' : '#EA113B'}"/>
             </svg>
           </div>
@@ -158,6 +179,7 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
             white-space: nowrap; 
             text-align: center; 
             text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+            pointer-events: none;
           ">
             ${shop.shopName}
           </div>
@@ -180,6 +202,12 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
       })
       overlay.setMap(mapInstance)
       shopMarkersRef.current.push(overlay)
+
+      setTimeout(() => {
+        const el = document.getElementById(overlayId)
+        if (!el) return
+        el.onclick = () => openDetail(shopId)
+      }, 0)
     })
   }, [shops, mapInstance, isMyPick])
 
@@ -196,11 +224,11 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
   }, [mapInstance, myLocation])
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gray-50">
+    <div className="relative h-full w-full overflow-hidden bg-gray-50">
       {isLoading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm">
           <div className="flex flex-col items-center">
-            <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-3 border-blue-500 border-t-transparent" />
             <p className="mt-3 text-sm font-semibold text-gray-600">현재 위치를 확인 중...</p>
           </div>
         </div>
@@ -208,9 +236,13 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
 
       <div
         ref={mapRef}
-        className="w-full h-full touch-pan-x touch-pan-y"
+        className="h-full w-full touch-pan-x touch-pan-y"
         style={{ minHeight: '100%' }}
       />
+
+      <BottomSheet isOpen={isSheetOpen} onClose={closeSheet} title="" sheetBg="#FCF4F3">
+        {selectedShopId ? <ShopDetailPage shopId={selectedShopId} onBack={closeSheet} /> : null}
+      </BottomSheet>
     </div>
   )
 }
