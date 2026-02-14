@@ -28,6 +28,8 @@ export type ReviewCardData = {
   keywords?: ReviewKeyword[]
   max?: number
   helpfulCount?: number
+  tags?: ReviewTag[]
+  extraTagCount?: number
 
   ownerReply?: ReviewOwnerReply
 }
