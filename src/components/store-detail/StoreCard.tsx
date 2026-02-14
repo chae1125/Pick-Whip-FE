@@ -1,7 +1,7 @@
 import { Star, MapPin, Phone, Cake, CalendarDays, Info } from 'lucide-react'
 
 export interface StoreInfoCard {
-  //shopId: number;
+  shopId: number
   shopName: string
   shopImageUrl: string | null
   averageRating: number

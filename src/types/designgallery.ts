@@ -1,5 +1,5 @@
 export type CakeCardItem = {
-  id: number
+  designId: number
   imageUrl: string | null
   cakeName: string
   price: number
