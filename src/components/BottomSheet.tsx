@@ -1,12 +1,18 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion'
+
+interface BottomSheetChildState {
+  isFull: boolean
+  ratio: number
+}
 
 interface BottomSheetProps {
   isOpen: boolean
   title?: string
   description?: string
   onClose: () => void
-  children: ReactNode
+  // children can be a node or a render-prop that receives sheet state
+  children: ReactNode | ((state: BottomSheetChildState) => ReactNode)
   sheetBg?: string
 }
 
@@ -24,6 +30,7 @@ export function BottomSheet({
   sheetBg,
 }: BottomSheetProps) {
   const sheetHeight = useMotionValue(window.innerHeight * MIN_HEIGHT)
+  const [isFull, setIsFull] = useState(false)
 
   const radius = useTransform(sheetHeight, (h) => {
     const ratio = h / window.innerHeight
@@ -35,6 +42,12 @@ export function BottomSheet({
       sheetHeight.set(window.innerHeight * MIN_HEIGHT)
     }
   }, [isOpen, sheetHeight])
+
+  useEffect(() => {
+    const ratio = sheetHeight.get() / window.innerHeight
+    setIsFull(ratio > 0.95)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   return (
     <AnimatePresence>
@@ -71,6 +84,8 @@ export function BottomSheet({
               const max = window.innerHeight * MAX_HEIGHT
 
               sheetHeight.set(Math.min(max, Math.max(min * 0.5, next)))
+              const ratio = sheetHeight.get() / window.innerHeight
+              setIsFull(ratio > 0.95)
             }}
             onDragEnd={(_e, info) => {
               const currentRatio = sheetHeight.get() / window.innerHeight
@@ -86,6 +101,7 @@ export function BottomSheet({
                   : window.innerHeight * MIN_HEIGHT
 
               sheetHeight.set(snap)
+              setIsFull(snap / window.innerHeight > 0.95)
             }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -102,7 +118,9 @@ export function BottomSheet({
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 pb-[calc(env(safe-area-inset-bottom)+20px)]">
-              {children}
+              {typeof children === 'function'
+                ? children({ isFull, ratio: sheetHeight.get() / window.innerHeight })
+                : children}
             </div>
           </motion.div>
         </>

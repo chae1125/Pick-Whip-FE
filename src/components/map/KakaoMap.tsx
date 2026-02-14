@@ -241,7 +241,11 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
       />
 
       <BottomSheet isOpen={isSheetOpen} onClose={closeSheet} title="" sheetBg="#FCF4F3">
-        {selectedShopId ? <ShopDetailPage shopId={selectedShopId} onBack={closeSheet} /> : null}
+        {({ isFull }) =>
+          selectedShopId ? (
+            <ShopDetailPage shopId={selectedShopId} onBack={closeSheet} sheetFull={isFull} />
+          ) : null
+        }
       </BottomSheet>
     </div>
   )
