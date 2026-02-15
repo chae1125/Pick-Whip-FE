@@ -15,7 +15,7 @@ export type ShopDetailResult = {
   shopImageUrl: string | null
   averageRating: number
   reviewCount: number
-  distance: number
+  distanceKm: number
   address: string
   phone: string
   keywords: string[]
@@ -212,6 +212,49 @@ export async function unlikeReview(reviewId: number): Promise<ReviewLikeResult> 
 
   if (!res.data.isSuccess || !res.data.result) {
     throw new Error(res.data.message ?? '리뷰 도움 취소 실패')
+  }
+
+  return res.data.result
+}
+
+// 리뷰 상세 조회 모달
+export type ReviewDetailResult = {
+  reviewId: number
+  nickname: string
+  profileUrl: string | null
+  rating: number
+  content: string
+  imageUrls: string[]
+  keywords: ReviewKeyword[]
+  createdDate: string
+  reply: string | null
+}
+
+export async function getReviewDetail(reviewId: number): Promise<ReviewDetailResult> {
+  const res = await axios.get<ApiResponse<ReviewDetailResult>>(`/reviews/${reviewId}`)
+
+  if (!res.data.isSuccess || !res.data.result) {
+    throw new Error(res.data.message ?? '리뷰 상세 조회 실패')
+  }
+
+  return res.data.result
+}
+
+//리뷰 필터 디자인 목록
+export type ReviewFilterDesignItem = {
+  designId: number
+  designName: string
+}
+
+export type ReviewFilterDesignsResult = {
+  items: ReviewFilterDesignItem[]
+}
+
+export async function getReviewFilterDesigns(shopId: number): Promise<ReviewFilterDesignsResult> {
+  const res = await axios.get<ApiResponse<ReviewFilterDesignsResult>>(`/shops/${shopId}/designs`)
+
+  if (!res.data.isSuccess || !res.data.result) {
+    throw new Error(res.data.message ?? '리뷰 필터 디자인 목록 조회 실패')
   }
 
   return res.data.result
