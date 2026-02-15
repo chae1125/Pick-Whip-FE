@@ -116,7 +116,7 @@ function PickUpDateTimeModalInner({
     return () => {
       alive = false
     }
-  }, [shopId, viewYear, viewMonth])
+  }, [shopId, viewYear, viewMonth, selectedDate])
 
   useEffect(() => {
     const run = async () => {
@@ -161,7 +161,7 @@ function PickUpDateTimeModalInner({
     }
 
     run()
-  }, [shopId, selectedDate, closedDateSet])
+  }, [shopId, selectedDate, closedDateSet, selectedTime])
 
   const canConfirm = Boolean(selectedDate && selectedTime.length === 1)
 
