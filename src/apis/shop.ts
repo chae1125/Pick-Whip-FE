@@ -36,7 +36,77 @@ export async function getShopDetail(
     throw new Error(res.data.message ?? '가게 상세 조회 실패')
   }
 
-  return res.data.result
+  const raw = res.data.result as Record<string, unknown>
+
+  const getNumber = (key: string, altKey?: string) => {
+    const v = raw[key]
+    if (typeof v === 'number') return v
+    const alt = altKey ? raw[altKey] : undefined
+    if (typeof alt === 'number') return alt
+    const s = raw[key]
+    if (typeof s === 'string') {
+      const n = Number(s)
+      return Number.isFinite(n) ? n : 0
+    }
+    return 0
+  }
+
+  const getString = (key: string, altKey?: string) => {
+    const v = raw[key]
+    if (typeof v === 'string') return v
+    const alt = altKey ? raw[altKey] : undefined
+    if (typeof alt === 'string') return alt
+    return ''
+  }
+
+  const getStringArray = (key: string) => {
+    const v = raw[key]
+    if (Array.isArray(v) && v.every((it) => typeof it === 'string')) return v as string[]
+    return []
+  }
+
+  const normalized: ShopDetailResult = {
+    shopId: getNumber('shopId', 'id'),
+    shopName: getString('shopName', 'name'),
+    shopImageUrl: (() => {
+      const v = raw['shopImageUrl'] ?? raw['imageUrl']
+      return typeof v === 'string' ? v : null
+    })(),
+    averageRating: getNumber('averageRating'),
+    reviewCount: getNumber('reviewCount'),
+    distance: (() => {
+      const v = raw['distanceKm'] ?? raw['distance']
+      if (typeof v === 'number') return v
+      if (typeof v === 'string') {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : 0
+      }
+      return 0
+    })(),
+    address: getString('address'),
+    phone: getString('phone'),
+    keywords: getStringArray('keywords'),
+    lat: (() => {
+      const v = raw['lat'] ?? raw['latitude']
+      if (typeof v === 'number') return v
+      if (typeof v === 'string') {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : 0
+      }
+      return 0
+    })(),
+    lon: (() => {
+      const v = raw['lon'] ?? raw['longitude']
+      if (typeof v === 'number') return v
+      if (typeof v === 'string') {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : 0
+      }
+      return 0
+    })(),
+  }
+
+  return normalized
 }
 
 // 매장 정보
@@ -190,7 +260,38 @@ export async function getShopDesignGallery(shopId: number): Promise<ShopDesignGa
   return res.data.result
 }
 
-// 리뷰 도움
+export type NearbyShopItem = {
+  shopId: number
+  shopName: string
+  shopImageUrl: string | null
+  averageRating: number
+  reviewCount?: number | null
+  minPrice?: number
+  maxPrice?: number
+  distance: number
+  tags: string[]
+  lat: number
+  lon: number
+}
+
+export type NearbyShopsResult = NearbyShopItem[]
+
+export async function getNearbyShops(
+  lat: number,
+  lon: number,
+  radius = 500,
+): Promise<NearbyShopsResult> {
+  const res = await axios.get<ApiResponse<NearbyShopsResult>>('/shops/nearby', {
+    params: { lat, lon, radius },
+  })
+
+  if (!res.data.isSuccess || !res.data.result) {
+    throw new Error(res.data.message ?? '주변 가게 조회 실패')
+  }
+
+  return res.data.result
+}
+
 export type ReviewLikeResult = {
   reviewId: number
   isLike: boolean

@@ -7,7 +7,8 @@ import DesignGalleryPage from '../pages/DesignGalleryPage'
 import StoreInfoPage from '../pages/StoreInfoPage'
 import ReviewPage from '../pages/ReviewPage'
 
-function formatDistanceKm(distance: number) {
+function formatDistanceKm(distance?: number | null) {
+  if (typeof distance !== 'number' || !isFinite(distance)) return '-'
   return `${distance.toFixed(1)}km`
 }
 
@@ -87,9 +88,9 @@ export default function ShopDetailPage({ shopId, onBack, sheetFull }: ShopDetail
           shopId: data.shopId,
           shopName: data.shopName,
           shopImageUrl: data.shopImageUrl,
-          averageRating: data.averageRating,
-          reviewCount: data.reviewCount,
-          distance: formatDistanceKm(data.distance),
+          averageRating: data.averageRating ?? 0,
+          reviewCount: data.reviewCount ?? 0,
+          distance: formatDistanceKm(data.distance ?? null),
           address: data.address,
           phone: data.phone,
           keywords: data.keywords ?? [],
