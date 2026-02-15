@@ -127,3 +127,102 @@ export const INITIAL_FILTERS: FilterState = {
 }
 
 export const INITIAL_PRICE: PriceRange = { min: 0, max: 200000 }
+
+// Centralized filter option lists for styles, shapes, flavors, toppings, special options, and purposes
+export const DESIGN_STYLE_OPTIONS: ChipOption[] = [
+  { label: '미니멀', value: 'minimal' },
+  { label: '화려한', value: 'gorgeous' },
+  { label: '빈티지', value: 'vintage' },
+  { label: '모던', value: 'modern' },
+  { label: '러블리', value: 'lovely' },
+  { label: '앤틱', value: 'antique' },
+  { label: '심플', value: 'simple' },
+  { label: '럭셔리', value: 'luxury' },
+]
+
+export const SHAPE_OPTIONS: ChipOption[] = [
+  { label: '원형', value: 'circle' },
+  { label: '하트', value: 'heart' },
+  { label: '사각', value: 'square' },
+]
+
+export const FLAVOR_OPTIONS: ChipOption[] = [
+  { label: '바닐라', value: 'vanilla' },
+  { label: '초콜릿', value: 'chocolate' },
+  { label: '딸기', value: 'strawberry' },
+  { label: '말차', value: 'green_tea' },
+  { label: '치즈', value: 'cheese' },
+  { label: '티라미수', value: 'tiramisu' },
+  { label: '레드벨벳', value: 'red_velvet' },
+  { label: '당근', value: 'carrot' },
+  { label: '얼그레이', value: 'earl_grey' },
+]
+
+export const TOPPINGS_OPTIONS: ChipOption[] = [
+  { label: '생과일', value: 'fresh_fruit' },
+  { label: '마카롱', value: 'macaron' },
+  { label: '생화', value: 'flower' },
+  { label: '조화', value: 'artificial_flower' },
+  { label: '금박', value: 'gold_leaf' },
+  { label: '초콜릿', value: 'chocolate_topping' },
+  { label: '쿠키', value: 'cookie' },
+  { label: '머랭', value: 'meringue' },
+]
+
+export const SPECIAL_OPTIONS: ChipOption[] = [
+  { label: '포토케이크', value: 'photo_cake' },
+  { label: '레터링', value: 'lettering' },
+  { label: '아이돌', value: 'idol' },
+  { label: '글루텐프리', value: 'gluten_free' },
+  { label: '비건', value: 'vegan' },
+]
+
+export const PURPOSE_OPTIONS: ChipOption[] = [
+  { label: '생일', value: 'birthday' },
+  { label: '기념일', value: 'anniversary' },
+  { label: '크리스마스', value: 'christmas' },
+  { label: '졸업', value: 'graduation' },
+  { label: '개업', value: 'opening' },
+]
+
+// Mapping from frontend values to API enum names (if API expects uppercase enums)
+export const STYLE_TO_API_MAP: Record<string, string> = {
+  minimal: 'MINIMAL',
+  gorgeous: 'GORGEOUS',
+  vintage: 'VINTAGE',
+  modern: 'MODERN',
+  lovely: 'LOVELY',
+  antique: 'ANTIQUE',
+  simple: 'SIMPLE',
+  luxury: 'LUXURY',
+  circle: 'ROUND',
+  heart: 'HEART',
+  square: 'SQUARE',
+  vanilla: 'VANILLA',
+  chocolate: 'CHOCOLATE',
+  strawberry: 'STRAWBERRY',
+  green_tea: 'MATCHA',
+  cheese: 'CHEESE',
+  tiramisu: 'TIRAMISU',
+  red_velvet: 'RED_VELVET',
+  carrot: 'CARROT',
+  earl_grey: 'EARL_GREY',
+  fresh_fruit: 'FRESH_FRUIT',
+  macaron: 'MACARON',
+  flower: 'FLOWER',
+  artificial_flower: 'FIGURINE',
+  gold_leaf: 'GOLD_LEAF',
+  chocolate_topping: 'CHOCOLATE_TOPPING',
+  cookie: 'COOKIE',
+  meringue: 'MERINGUE',
+  photo_cake: 'PHOTO_CAKE',
+  lettering: 'LETTERING',
+  idol: 'IDOL',
+  gluten_free: 'GLUTEN_FREE',
+  vegan: 'VEGAN',
+  birthday: 'BIRTHDAY',
+  anniversary: 'ANNIVERSARY',
+  christmas: 'CHRISTMAS',
+  graduation: 'GRADUATION',
+  opening: 'OPENING',
+}

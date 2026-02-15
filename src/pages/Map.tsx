@@ -16,6 +16,12 @@ import {
   INITIAL_FILTERS,
   INITIAL_PRICE,
   INITIAL_DATE,
+  DESIGN_STYLE_OPTIONS,
+  SHAPE_OPTIONS,
+  FLAVOR_OPTIONS,
+  TOPPINGS_OPTIONS,
+  SPECIAL_OPTIONS,
+  PURPOSE_OPTIONS,
 } from '@/constants/filter'
 import { getShopsInMap } from '@/apis/map'
 import { getNearbyShops, type NearbyShopItem } from '@/apis/shop'
@@ -404,16 +410,7 @@ export default function Map() {
                 <div className="mt-4">
                   <FilterChipsGroup
                     title="디자인 스타일"
-                    options={[
-                      { label: '미니멀', value: 'minimal' },
-                      { label: '화려한', value: 'decorated' },
-                      { label: '빈티지', value: 'vintage' },
-                      { label: '모던', value: 'modern' },
-                      { label: '러블리', value: 'lovely' },
-                      { label: '앤틱', value: 'antique' },
-                      { label: '심플', value: 'simple' },
-                      { label: '럭셔리', value: 'luxury' },
-                    ]}
+                    options={DESIGN_STYLE_OPTIONS}
                     value={tempFilters.designStyles}
                     onChange={(newDesignStyles) =>
                       setTempFilters((prev) => ({ ...prev, designStyles: newDesignStyles }))
@@ -423,11 +420,7 @@ export default function Map() {
                 <div className="mt-6">
                   <FilterChipsGroup
                     title="케이크 형태"
-                    options={[
-                      { label: '원형', value: 'circle' },
-                      { label: '하트', value: 'heart' },
-                      { label: '사각', value: 'square' },
-                    ]}
+                    options={SHAPE_OPTIONS}
                     value={tempFilters.shapes}
                     onChange={(newShapes) =>
                       setTempFilters((prev) => ({ ...prev, shapes: newShapes }))
@@ -437,17 +430,7 @@ export default function Map() {
                 <div className="mt-6">
                   <FilterChipsGroup
                     title="맛 / 베이스"
-                    options={[
-                      { label: '바닐라', value: 'vanilla' },
-                      { label: '초콜릿', value: 'chocolate' },
-                      { label: '딸기', value: 'strawberry' },
-                      { label: '말차', value: 'green_tea' },
-                      { label: '치즈', value: 'cheese' },
-                      { label: '티라미수', value: 'tiramisu' },
-                      { label: '레드벨벳', value: 'red_velvet' },
-                      { label: '당근', value: 'carrot' },
-                      { label: '얼그레이', value: 'earl_grey' },
-                    ]}
+                    options={FLAVOR_OPTIONS}
                     value={tempFilters.flavors}
                     onChange={(newFlavors) =>
                       setTempFilters((prev) => ({ ...prev, flavors: newFlavors }))
@@ -457,16 +440,7 @@ export default function Map() {
                 <div className="mt-6">
                   <FilterChipsGroup
                     title="토핑 / 데코레이션"
-                    options={[
-                      { label: '생과일', value: 'fruit' },
-                      { label: '마카롱', value: 'macaron' },
-                      { label: '생화', value: 'flower' },
-                      { label: '조화', value: 'artificial_flower' },
-                      { label: '금박', value: 'gold_leaf' },
-                      { label: '초콜릿', value: 'chocolate' },
-                      { label: '쿠키', value: 'cookie' },
-                      { label: '머랭', value: 'meringue' },
-                    ]}
+                    options={TOPPINGS_OPTIONS}
                     value={tempFilters.toppings}
                     onChange={(newToppings) =>
                       setTempFilters((prev) => ({ ...prev, toppings: newToppings }))
@@ -476,13 +450,7 @@ export default function Map() {
                 <div className="mt-6">
                   <FilterChipsGroup
                     title="특별 옵션"
-                    options={[
-                      { label: '포토케이크', value: 'photo_cake' },
-                      { label: '레터링', value: 'lettering' },
-                      { label: '아이돌', value: 'idol' },
-                      { label: '글루텐프리', value: 'gluten_free' },
-                      { label: '비건', value: 'vegan' },
-                    ]}
+                    options={SPECIAL_OPTIONS}
                     value={tempFilters.specialOptions}
                     onChange={(newSpecialOptions) =>
                       setTempFilters((prev) => ({ ...prev, specialOptions: newSpecialOptions }))
@@ -497,13 +465,7 @@ export default function Map() {
                 <div className="mt-4">
                   <FilterChipsGroup
                     title="케이크 용도"
-                    options={[
-                      { label: '생일', value: 'birthday' },
-                      { label: '기념일', value: 'anniversary' },
-                      { label: '크리스마스', value: 'christmas' },
-                      { label: '졸업', value: 'graduation' },
-                      { label: '개업', value: 'opening' },
-                    ]}
+                    options={PURPOSE_OPTIONS}
                     value={tempFilters.purpose}
                     onChange={(newPurpose) =>
                       setTempFilters((prev) => ({ ...prev, purpose: newPurpose }))

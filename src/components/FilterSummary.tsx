@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { ChipOption, FilterState, PriceRange } from '@/types/filter'
+import { PURPOSE_OPTIONS } from '@/constants/filter'
 
 const KOREAN_MAP: Record<string, string> = {
   minimal: '미니멀',
@@ -41,13 +42,7 @@ const KOREAN_MAP: Record<string, string> = {
   opening: '개업',
 }
 
-const PURPOSE_OPTIONS: ChipOption[] = [
-  { label: '생일', value: 'birthday' },
-  { label: '기념일', value: 'anniversary' },
-  { label: '크리스마스', value: 'christmas' },
-  { label: '졸업', value: 'graduation' },
-  { label: '개업', value: 'opening' },
-]
+// purpose options are imported from centralized constants
 
 interface FilterSummaryProps {
   filters: FilterState

@@ -3,6 +3,13 @@ import { BottomSheet } from '../../BottomSheet'
 import { FilterNavbar } from '../../FilterNavbar'
 import { FilterChipsGroup } from '../../FilterChipsGroup'
 import FilterBottomActions from '../../FilterBottomActions'
+import {
+  DESIGN_STYLE_OPTIONS,
+  SHAPE_OPTIONS,
+  FLAVOR_OPTIONS,
+  TOPPINGS_OPTIONS,
+  SPECIAL_OPTIONS,
+} from '@/constants/filter'
 
 type ChipOption = { value: string; label: string }
 
@@ -26,26 +33,12 @@ const GALLERY_OPTIONS: ChipOption[] = [
   { value: 'christmas_party', label: '크리스마스 파티 케이크' },
   { value: 'mini', label: '미니 케이크' },
 ]
-const STYLE_OPTIONS: ChipOption[] = [
-  { value: 'minimal', label: '미니멀' },
-  { value: 'colorful', label: '화려한' },
-]
-const SHAPE_OPTIONS: ChipOption[] = [
-  { value: 'round', label: '원형' },
-  { value: 'heart', label: '하트' },
-]
-const BASE_OPTIONS: ChipOption[] = [
-  { value: 'vanilla', label: '바닐라' },
-  { value: 'choco', label: '초콜릿' },
-]
-const TOPPING_OPTIONS: ChipOption[] = [
-  { value: 'fruit', label: '생과일' },
-  { value: 'macaron', label: '마카롱' },
-]
-const SPECIAL_OPTIONS: ChipOption[] = [
-  { value: 'photo', label: '포토케이크' },
-  { value: 'lettering', label: '레터링' },
-]
+// Reuse centralized option lists for consistency
+const STYLE_OPTIONS = DESIGN_STYLE_OPTIONS
+const SHAPE_OPTIONS_LOCAL = SHAPE_OPTIONS
+const BASE_OPTIONS = FLAVOR_OPTIONS
+const TOPPING_OPTIONS = TOPPINGS_OPTIONS
+const SPECIAL_OPTIONS_LOCAL = SPECIAL_OPTIONS
 
 const DEFAULT_FILTERS: ReviewFilters = {
   gallery: [],
@@ -86,7 +79,7 @@ export default function ReviewFilterSheet({
     setDraft((prev) => ({ ...prev, [k]: next }))
 
   return (
-    <BottomSheet isOpen={isOpen} title="필터" onClose={onClose}>
+    <BottomSheet isOpen={isOpen} title="필터" onClose={onClose} allowPeek={false}>
       <div className="space-y-6">
         <FilterNavbar
           items={TAB_ITEMS}
@@ -115,7 +108,7 @@ export default function ReviewFilterSheet({
             />
             <FilterChipsGroup
               title="케이크 형태"
-              options={SHAPE_OPTIONS}
+              options={SHAPE_OPTIONS_LOCAL}
               value={draft.shape}
               onChange={setField('shape')}
             />
@@ -133,7 +126,7 @@ export default function ReviewFilterSheet({
             />
             <FilterChipsGroup
               title="특별 옵션"
-              options={SPECIAL_OPTIONS}
+              options={SPECIAL_OPTIONS_LOCAL}
               value={draft.special}
               onChange={setField('special')}
             />
