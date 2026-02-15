@@ -66,14 +66,10 @@ export default function Map() {
     }
   }, [currentRadius])
 
-  // Location is provided by the KakaoMap component via `onUserLocation`.
-  // This avoids duplicate geolocation calls and ensures the map's initial
-  // detected location is treated as the app's user location.
   const handleUserLocation = (loc: { lat: number; lng: number } | null) => {
     const base = loc ?? DEFAULT_LOCATION
     setMyLocation(base)
     if (!initialMyLocationRef.current) initialMyLocationRef.current = base
-    // fetch initial nearby shops
     void fetchNearby(base.lat, base.lng, currentRadiusRef.current)
   }
 
@@ -97,7 +93,6 @@ export default function Map() {
 
   function handleRadiusChange(r: number) {
     setCurrentRadius(r)
-    // prefer manual/user-centered fetch — prevent the viewport debounce from overriding briefly
     skipBoundsRef.current = true
     const center = mapCenter ?? myLocation
     if (center) {
@@ -155,7 +150,6 @@ export default function Map() {
         const data = await getShopsInMap(bounds)
         if (data.isSuccess) setShops(data.result?.shops ?? [])
       } catch (err: unknown) {
-        // log to help debugging map fetch failures
         console.error('getShopsInMap failed', err)
       }
     })()
@@ -169,7 +163,6 @@ export default function Map() {
       try {
         setNearbyLoading(true)
         setNearbyError(null)
-        // use the user-selected radius from ref to avoid recreating this callback
         const list = await getNearbyShops(centerLat, centerLon, currentRadiusRef.current)
         setNearbyShops(list)
       } catch (err: unknown) {

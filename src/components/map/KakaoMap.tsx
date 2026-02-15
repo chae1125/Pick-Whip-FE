@@ -235,9 +235,6 @@ export default function KakaoMap({
     const handleResize = () => {
       if (mapInstance) {
         mapInstance.relayout()
-        // Don't force-center map to `myLocation` on every resize —
-        // preserve current viewport center so UI interactions (dropdowns, sheets)
-        // that cause layout changes won't move the map unexpectedly.
       }
     }
     window.addEventListener('resize', handleResize)
