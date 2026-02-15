@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ReviewCardData } from '../../../types/review'
 import { ArrowLeft } from 'lucide-react'
 import ReviewImageViewer from './ReviewImageViewer'
 import ReviewMeta from './ReviewMeta'
+import type { ReviewDetailResult } from '@/apis/shop'
+
+export type ReviewDetailModalData = ReviewDetailResult & {
+  option: string
+}
 
 type Props = {
   isOpen: boolean
-  data: ReviewCardData | null
+  data: ReviewDetailModalData | null
   onClose: () => void
 }
 
@@ -14,7 +18,7 @@ function ReviewDetailModalContent({
   data,
   onClose,
 }: {
-  data: ReviewCardData
+  data: ReviewDetailModalData
   onClose: () => void
 }) {
   const images = useMemo(() => data.imageUrls ?? [], [data])
@@ -41,7 +45,7 @@ function ReviewDetailModalContent({
     }
   }, [])
 
-  const { menuName, optionLabel, createdAt, rating, content, keywords, ownerReply } = data
+  const { nickname, rating, content, keywords, createdDate, reply, option } = data
 
   return (
     <div className="fixed inset-0 z-[60]">
@@ -74,13 +78,14 @@ function ReviewDetailModalContent({
           />
 
           <ReviewMeta
-            menuName={menuName}
-            optionLabel={optionLabel}
-            createdAt={createdAt}
+            nickname={nickname}
             rating={rating}
             content={content}
+            option={option}
+            createdDate={createdDate}
             keywords={keywords}
-            ownerReply={ownerReply}
+            max={3}
+            reply={reply}
           />
         </div>
       </div>

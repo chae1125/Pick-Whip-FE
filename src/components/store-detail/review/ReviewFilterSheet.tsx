@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BottomSheet } from '../../BottomSheet'
 import { FilterNavbar } from '../../FilterNavbar'
 import { FilterChipsGroup } from '../../FilterChipsGroup'
 import FilterBottomActions from '../../FilterBottomActions'
+import { getReviewFilterDesigns } from '@/apis/shop'
 
 type ChipOption = { value: string; label: string }
 
@@ -22,10 +23,6 @@ const TABS = [
 type TabKey = (typeof TABS)[number]['key']
 const TAB_ITEMS: { key: string; label: string }[] = [...TABS]
 
-const GALLERY_OPTIONS: ChipOption[] = [
-  { value: 'christmas_party', label: '크리스마스 파티 케이크' },
-  { value: 'mini', label: '미니 케이크' },
-]
 const STYLE_OPTIONS: ChipOption[] = [
   { value: 'minimal', label: '미니멀' },
   { value: 'colorful', label: '화려한' },
@@ -57,11 +54,13 @@ const DEFAULT_FILTERS: ReviewFilters = {
 }
 
 export default function ReviewFilterSheet({
+  shopId,
   isOpen,
   onClose,
   value,
   onApply,
 }: {
+  shopId: number
   isOpen: boolean
   onClose: () => void
   value: ReviewFilters
@@ -69,6 +68,35 @@ export default function ReviewFilterSheet({
 }) {
   const [activeTab, setActiveTab] = useState<TabKey>('gallery')
   const [draft, setDraft] = useState<ReviewFilters>(value)
+
+  const [galleryOptions, setGalleryOptions] = useState<ChipOption[]>([])
+  const [galleryLoading, setGalleryLoading] = useState(false)
+
+  useEffect(() => {
+    setDraft(value)
+  }, [value])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const run = async () => {
+      setGalleryLoading(true)
+      try {
+        const res = await getReviewFilterDesigns(shopId)
+        const opts: ChipOption[] = (res.items ?? []).map((it) => ({
+          value: String(it.designId),
+          label: it.designName,
+        }))
+        setGalleryOptions(opts)
+      } catch {
+        setGalleryOptions([])
+      } finally {
+        setGalleryLoading(false)
+      }
+    }
+
+    run()
+  }, [isOpen, shopId])
 
   const applyDisabled = useMemo(
     () =>
@@ -82,6 +110,7 @@ export default function ReviewFilterSheet({
       ),
     [draft],
   )
+
   const setField = (k: keyof ReviewFilters) => (next: string[]) =>
     setDraft((prev) => ({ ...prev, [k]: next }))
 
@@ -98,10 +127,11 @@ export default function ReviewFilterSheet({
           <div className="space-y-6">
             <FilterChipsGroup
               title="디자인 갤러리"
-              options={GALLERY_OPTIONS}
+              options={galleryOptions}
               value={draft.gallery}
               onChange={setField('gallery')}
             />
+            {galleryLoading && <div className="text-xs text-gray-400">불러오는 중...</div>}
           </div>
         )}
 

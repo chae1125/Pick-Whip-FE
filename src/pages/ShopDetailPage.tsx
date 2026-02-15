@@ -66,7 +66,7 @@ export default function ShopDetailPage({ shopId, onBack }: ShopDetailPageProps) 
           shopImageUrl: data.shopImageUrl,
           averageRating: data.averageRating,
           reviewCount: data.reviewCount,
-          distance: formatDistanceKm(data.distance),
+          distance: formatDistanceKm(data.distanceKm),
           address: data.address,
           phone: data.phone,
           keywords: data.keywords ?? [],
