@@ -26,6 +26,39 @@ const itemVariants: Variants = {
   },
 }
 
+const subtleFloatVariants: Variants = {
+  animate: {
+    y: [0, -8, 0],
+    transition: {
+      duration: 4,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+}
+
+const subtleScaleVariants: Variants = {
+  animate: {
+    scale: [1, 1.02, 1],
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+}
+
+const subtleRotateVariants: Variants = {
+  animate: {
+    rotate: [0, 2, -2, 0],
+    transition: {
+      duration: 5,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+}
+
 export default function Login() {
   const KAKAO_AUTH_URL = import.meta.env.VITE_KAKAO_AUTH_URL
 
@@ -54,29 +87,46 @@ export default function Login() {
         className="relative z-10 flex flex-col items-center justify-center z-10"
         variants={itemVariants}
       >
-        <img
+        <motion.img
           src={LoginSub}
           alt="서브 이미지"
           className="absolute -top-30 w-[150%] max-w-[600px] mb-8 "
+          variants={subtleFloatVariants}
+          animate="animate"
         />
-        <img src={logo} alt="서비스 로고" className="w-120 mt-15" />
-        <img src={LoginMain} alt="메인 이미지" className="w-100 -mt-5" />
+        <motion.img
+          src={logo}
+          alt="서비스 로고"
+          className="w-120 mt-15"
+          variants={subtleScaleVariants}
+          animate="animate"
+        />
+        <motion.img
+          src={LoginMain}
+          alt="메인 이미지"
+          className="w-100 -mt-5"
+          variants={subtleRotateVariants}
+          animate="animate"
+        />
 
-        <svg
+        <motion.svg
           viewBox="0 0 500 120"
           className="w-full max-w-md -mt-10"
           style={{ overflow: 'visible' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
         >
           <defs>
             <path id="curve" d="M 50 20 Q 250 170 450 20" fill="transparent" />
           </defs>
 
-          <text fill="currentColor" fontSize="18" fontWeight="600" letterSpacing="3">
+          <text fill="#57504F" fontSize="18" fontWeight="600" letterSpacing="3">
             <textPath href="#curve" startOffset="50%" textAnchor="middle">
               세상에 하나뿐인 케이크, 내 맘대로 휘핑하다
             </textPath>
           </text>
-        </svg>
+        </motion.svg>
       </motion.div>
 
       <motion.button
