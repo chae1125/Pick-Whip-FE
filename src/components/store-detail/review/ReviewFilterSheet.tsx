@@ -1,8 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BottomSheet } from '../../BottomSheet'
 import { FilterNavbar } from '../../FilterNavbar'
 import { FilterChipsGroup } from '../../FilterChipsGroup'
 import FilterBottomActions from '../../FilterBottomActions'
+import { getReviewFilterDesigns } from '@/apis/shop'
+import {
+  DESIGN_STYLE_OPTIONS,
+  SHAPE_OPTIONS,
+  FLAVOR_OPTIONS,
+  TOPPINGS_OPTIONS,
+  SPECIAL_OPTIONS,
+} from '@/constants/filter'
 
 type ChipOption = { value: string; label: string }
 
@@ -22,31 +30,6 @@ const TABS = [
 type TabKey = (typeof TABS)[number]['key']
 const TAB_ITEMS: { key: string; label: string }[] = [...TABS]
 
-const GALLERY_OPTIONS: ChipOption[] = [
-  { value: 'christmas_party', label: '크리스마스 파티 케이크' },
-  { value: 'mini', label: '미니 케이크' },
-]
-const STYLE_OPTIONS: ChipOption[] = [
-  { value: 'minimal', label: '미니멀' },
-  { value: 'colorful', label: '화려한' },
-]
-const SHAPE_OPTIONS: ChipOption[] = [
-  { value: 'round', label: '원형' },
-  { value: 'heart', label: '하트' },
-]
-const BASE_OPTIONS: ChipOption[] = [
-  { value: 'vanilla', label: '바닐라' },
-  { value: 'choco', label: '초콜릿' },
-]
-const TOPPING_OPTIONS: ChipOption[] = [
-  { value: 'fruit', label: '생과일' },
-  { value: 'macaron', label: '마카롱' },
-]
-const SPECIAL_OPTIONS: ChipOption[] = [
-  { value: 'photo', label: '포토케이크' },
-  { value: 'lettering', label: '레터링' },
-]
-
 const DEFAULT_FILTERS: ReviewFilters = {
   gallery: [],
   style: [],
@@ -57,11 +40,13 @@ const DEFAULT_FILTERS: ReviewFilters = {
 }
 
 export default function ReviewFilterSheet({
+  shopId,
   isOpen,
   onClose,
   value,
   onApply,
 }: {
+  shopId: number
   isOpen: boolean
   onClose: () => void
   value: ReviewFilters
@@ -69,6 +54,35 @@ export default function ReviewFilterSheet({
 }) {
   const [activeTab, setActiveTab] = useState<TabKey>('gallery')
   const [draft, setDraft] = useState<ReviewFilters>(value)
+
+  const [galleryOptions, setGalleryOptions] = useState<ChipOption[]>([])
+  const [galleryLoading, setGalleryLoading] = useState(false)
+
+  useEffect(() => {
+    setDraft(value)
+  }, [value])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const run = async () => {
+      setGalleryLoading(true)
+      try {
+        const res = await getReviewFilterDesigns(shopId)
+        const opts: ChipOption[] = (res.items ?? []).map((it) => ({
+          value: String(it.designId),
+          label: it.designName,
+        }))
+        setGalleryOptions(opts)
+      } catch {
+        setGalleryOptions([])
+      } finally {
+        setGalleryLoading(false)
+      }
+    }
+
+    run()
+  }, [isOpen, shopId])
 
   const applyDisabled = useMemo(
     () =>
@@ -82,11 +96,12 @@ export default function ReviewFilterSheet({
       ),
     [draft],
   )
+
   const setField = (k: keyof ReviewFilters) => (next: string[]) =>
     setDraft((prev) => ({ ...prev, [k]: next }))
 
   return (
-    <BottomSheet isOpen={isOpen} title="필터" onClose={onClose}>
+    <BottomSheet isOpen={isOpen} title="필터" onClose={onClose} allowPeek={false}>
       <div className="space-y-6">
         <FilterNavbar
           items={TAB_ITEMS}
@@ -98,10 +113,11 @@ export default function ReviewFilterSheet({
           <div className="space-y-6">
             <FilterChipsGroup
               title="디자인 갤러리"
-              options={GALLERY_OPTIONS}
+              options={galleryOptions}
               value={draft.gallery}
               onChange={setField('gallery')}
             />
+            {galleryLoading && <div className="text-xs text-gray-400">불러오는 중...</div>}
           </div>
         )}
 
@@ -109,7 +125,7 @@ export default function ReviewFilterSheet({
           <div className="space-y-12">
             <FilterChipsGroup
               title="디자인 스타일"
-              options={STYLE_OPTIONS}
+              options={DESIGN_STYLE_OPTIONS}
               value={draft.style}
               onChange={setField('style')}
             />
@@ -121,13 +137,13 @@ export default function ReviewFilterSheet({
             />
             <FilterChipsGroup
               title="맛 / 베이스"
-              options={BASE_OPTIONS}
+              options={FLAVOR_OPTIONS}
               value={draft.base}
               onChange={setField('base')}
             />
             <FilterChipsGroup
               title="토핑 / 데코레이션"
-              options={TOPPING_OPTIONS}
+              options={TOPPINGS_OPTIONS}
               value={draft.topping}
               onChange={setField('topping')}
             />

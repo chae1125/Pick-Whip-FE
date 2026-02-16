@@ -1,7 +1,7 @@
 import { Star, MapPin, Phone, Cake, CalendarDays, Info } from 'lucide-react'
 
 export interface StoreInfoCard {
-  //shopId: number;
+  shopId: number
   shopName: string
   shopImageUrl: string | null
   averageRating: number
@@ -40,11 +40,11 @@ export default function StoreCard({
           <img
             src={shopImageUrl}
             alt={shopName}
-            className="h-auto w-full object-cover"
+            className="h-auto w-full max-h-[260px] object-cover"
             loading="lazy"
           />
         ) : (
-          <div className="w-full aspect-[16/9] flex items-center justify-center bg-[#F3F4F6] text-[#57504F] text-[14px]">
+          <div className="w-full aspect-[16/9] max-h-[260px] flex items-center justify-center bg-[#F3F4F6] text-[#57504F] text-[14px]">
             등록된 이미지가 없습니다.
           </div>
         )}

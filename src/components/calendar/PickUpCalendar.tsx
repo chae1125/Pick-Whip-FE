@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 type DayCell = {
   date: Date
@@ -15,6 +15,13 @@ function isSameDay(a: Date, b: Date) {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   )
+}
+
+function toYmd(d: Date) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function buildMonthGrid42(year: number, monthIndex: number): DayCell[] {
@@ -52,6 +59,8 @@ type BorderCalendarProps = {
   disablePast?: boolean
   minDate?: Date
   initialMonth?: Date
+  disabledDateSet?: Set<string>
+  onViewChange?: (year: number, month1based: number) => void
 }
 
 export default function PickUpCalendar({
@@ -60,6 +69,8 @@ export default function PickUpCalendar({
   disablePast = true,
   minDate,
   initialMonth,
+  disabledDateSet,
+  onViewChange,
 }: BorderCalendarProps) {
   const today = useMemo(() => startOfDay(new Date()), [])
   const min = useMemo(() => startOfDay(minDate ?? today), [minDate, today])
@@ -70,6 +81,10 @@ export default function PickUpCalendar({
 
   const cells = useMemo(() => buildMonthGrid42(viewYear, viewMonth), [viewYear, viewMonth])
   const dow = ['일', '월', '화', '수', '목', '금', '토']
+
+  useEffect(() => {
+    onViewChange?.(viewYear, viewMonth + 1)
+  }, [viewYear, viewMonth, onViewChange])
 
   const goPrev = () => {
     const d = new Date(viewYear, viewMonth - 1, 1)
@@ -85,7 +100,12 @@ export default function PickUpCalendar({
 
   const pick = (d: Date) => {
     const only = startOfDay(d)
-    if (disablePast && only.getTime() < min.getTime()) return
+    const ymd = toYmd(only)
+
+    const disabledByPast = disablePast && only.getTime() < min.getTime()
+    const disabledByClosed = disabledDateSet?.has(ymd) ?? false
+    if (disabledByPast || disabledByClosed) return
+
     onChange(only)
   }
 
@@ -127,7 +147,12 @@ export default function PickUpCalendar({
         <div className="mx-auto grid w-fit grid-cols-7 gap-y-2 pb-2">
           {cells.map((cell, idx) => {
             const d = startOfDay(cell.date)
-            const disabled = disablePast && d.getTime() < min.getTime()
+            const ymd = toYmd(d)
+
+            const disabledByPast = disablePast && d.getTime() < min.getTime()
+            const disabledByClosed = disabledDateSet?.has(ymd) ?? false
+            const disabled = disabledByPast || disabledByClosed
+
             const selected = value ? isSameDay(d, value) : false
 
             let textColor = '#0A0A0A'

@@ -1,19 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ReviewCardData } from '../../../types/review'
 import { ArrowLeft } from 'lucide-react'
 import ReviewImageViewer from './ReviewImageViewer'
 import ReviewMeta from './ReviewMeta'
+import type { ReviewDetailResult } from '@/apis/shop'
+
+export type ReviewDetailModalData = ReviewDetailResult & {
+  option: string
+}
 
 type Props = {
   isOpen: boolean
-  data: ReviewCardData | null
+  data: ReviewDetailModalData | null
   onClose: () => void
 }
 
-export default function ReviewDetailModal({ isOpen, data, onClose }: Props) {
-  const open = isOpen && !!data
-
-  const images = useMemo(() => data?.imageUrls ?? [], [data])
+function ReviewDetailModalContent({
+  data,
+  onClose,
+}: {
+  data: ReviewDetailModalData
+  onClose: () => void
+}) {
+  const images = useMemo(() => data.imageUrls ?? [], [data])
   const total = images.length
   const canSlide = total > 1
 
@@ -30,20 +38,14 @@ export default function ReviewDetailModal({ isOpen, data, onClose }: Props) {
   }
 
   useEffect(() => {
-    if (!open) return
-
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-
     return () => {
       document.body.style.overflow = prevOverflow
     }
-  }, [open])
+  }, [])
 
-  if (!open) return null
-
-  const { menuName, optionLabel, createdAt, rating, content, tags, extraTagCount, ownerReply } =
-    data!
+  const { nickname, rating, content, keywords, createdDate, reply, option } = data
 
   return (
     <div className="fixed inset-0 z-[60]">
@@ -76,17 +78,23 @@ export default function ReviewDetailModal({ isOpen, data, onClose }: Props) {
           />
 
           <ReviewMeta
-            menuName={menuName}
-            optionLabel={optionLabel}
-            createdAt={createdAt}
+            nickname={nickname}
             rating={rating}
             content={content}
-            tags={tags}
-            extraTagCount={extraTagCount}
-            ownerReply={ownerReply}
+            option={option}
+            createdDate={createdDate}
+            keywords={keywords}
+            max={3}
+            reply={reply}
           />
         </div>
       </div>
     </div>
   )
+}
+
+export default function ReviewDetailModal({ isOpen, data, onClose }: Props) {
+  const open = isOpen && !!data
+  if (!open || !data) return null
+  return <ReviewDetailModalContent data={data} onClose={onClose} />
 }

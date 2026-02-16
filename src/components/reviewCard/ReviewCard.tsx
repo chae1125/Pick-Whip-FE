@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import type { ReviewCardData } from '../../types/review'
-import { OwnerReply } from './OwnerReply'
 import { RatingStars } from './RatingStars'
 import { ReviewImages } from './ReviewImage'
 import { ReviewTags } from './ReviewTag'
@@ -10,21 +8,25 @@ import IconThumbUp from '../../assets/reviewCard/icon-thumb-up.svg?react'
 import IconThumbUpFilled from '../../assets/reviewCard/icon-thumb-up-filled.svg?react'
 import IconMoreVertical from '../../assets/reviewCard/icon-more-vertical.svg?react'
 
-export function ReviewCard({ data, onOpen }: { data: ReviewCardData; onOpen?: () => void }) {
+import type { ShopReviewItem } from '@/apis/shop'
+import { likeReview, unlikeReview } from '@/apis/shop'
+
+export function ReviewCard({ data, onOpen }: { data: ShopReviewItem; onOpen?: () => void }) {
   const {
-    menuName,
-    optionLabel,
-    createdAt,
+    reviewId,
+    nickname,
+    createdDate,
     rating,
     content,
     imageUrls,
-    tags,
-    extraTagCount,
-    helpfulCount,
-    ownerReply,
+    keywords,
+    isLike,
+    likeCount,
+    option,
   } = data
 
-  const [isHelpful, setIsHelpful] = useState(false)
+  const [isHelpful, setIsHelpful] = useState(isLike)
+  const [helpfulCount, setHelpfulCount] = useState(likeCount)
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false)
 
   const handleEdit = () => {
@@ -35,6 +37,13 @@ export function ReviewCard({ data, onOpen }: { data: ReviewCardData; onOpen?: ()
   const handleDelete = () => {
     alert('삭제하기 클릭')
     setIsActionSheetOpen(false)
+  }
+
+  const handleToggleHelpful = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    const result = isHelpful ? await unlikeReview(reviewId) : await likeReview(reviewId)
+    setIsHelpful(result.isLike)
+    setHelpfulCount(result.likeCount)
   }
 
   return (
@@ -53,15 +62,15 @@ export function ReviewCard({ data, onOpen }: { data: ReviewCardData; onOpen?: ()
       <header className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5 text-[#0A0A0A]">
-            <span className="text-[15px]">{menuName}</span>
+            <span className="text-[15px]">{nickname}</span>
             <span className="text-[#c2c2c2] text-xs">·</span>
-            <time className="text-sm text-[#999999] font-normal">{createdAt}</time>
+            <time className="text-sm text-[#999999] font-normal">{createdDate}</time>
           </div>
 
-          {optionLabel ? (
+          {option ? (
             <div className="mt-1.5">
               <span className="inline-flex items-center rounded-[4px] bg-[#F2F2F2] px-1.5 py-0.5 text-xs text-[#57504F]">
-                옵션&nbsp;&nbsp;{optionLabel}
+                옵션&nbsp;&nbsp;{option}
               </span>
             </div>
           ) : null}
@@ -93,35 +102,24 @@ export function ReviewCard({ data, onOpen }: { data: ReviewCardData; onOpen?: ()
       </div>
 
       <div onClick={(e) => e.stopPropagation()}>
-        <ReviewTags tags={tags} extraTagCount={extraTagCount} />
+        <ReviewTags keywords={keywords} max={3} />
       </div>
 
-      {typeof helpfulCount === 'number' ? (
-        <div className="mt-6">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsHelpful(!isHelpful)
-            }}
-            className={`inline-flex items-center gap-2 rounded-lg border px-2 py-1 transition-colors ${
-              isHelpful ? 'border-[#4A5565] text-[#4A5565]' : 'border-[#bebebe] text-[#7D8590]'
-            }`}
-          >
-            {isHelpful ? (
-              <IconThumbUpFilled className="h-4 w-4 text-[#4A5565]" />
-            ) : (
-              <IconThumbUp className="h-4 w-4" />
-            )}
-            <span className="text-[12px]">
-              도움이 됐어요 {isHelpful ? helpfulCount + 1 : helpfulCount}
-            </span>
-          </button>
-        </div>
-      ) : null}
-
-      <div onClick={(e) => e.stopPropagation()}>
-        <OwnerReply reply={ownerReply} />
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={handleToggleHelpful}
+          className={`inline-flex items-center gap-2 rounded-lg border px-2 py-1 transition-colors ${
+            isHelpful ? 'border-[#4A5565] text-[#4A5565]' : 'border-[#bebebe] text-[#7D8590]'
+          }`}
+        >
+          {isHelpful ? (
+            <IconThumbUpFilled className="h-4 w-4 text-[#4A5565]" />
+          ) : (
+            <IconThumbUp className="h-4 w-4" />
+          )}
+          <span className="text-[12px]">도움이 됐어요 {helpfulCount}</span>
+        </button>
       </div>
 
       <ReviewActionSheet

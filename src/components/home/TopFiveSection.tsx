@@ -28,7 +28,7 @@ export default function TopFiveSection() {
     }
 
     fetchData()
-  }, [])
+  }, [userId])
 
   if (items.length === 0) {
     return null

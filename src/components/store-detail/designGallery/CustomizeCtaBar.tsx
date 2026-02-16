@@ -6,6 +6,7 @@ type CustomizeCtaBarProps = {
   onClick?: () => void
 
   className?: string
+  visible?: boolean
 }
 
 export default function CustomizeCtaBar({
@@ -13,11 +14,14 @@ export default function CustomizeCtaBar({
   buttonText = '직접 커스터마이징 시작하기',
   onClick,
   className = '',
+  visible = true,
 }: CustomizeCtaBarProps) {
+  if (!visible) return null
+
   return (
     <div
       className={[
-        'container fixed left-0 right-0 bottom-0 z-50',
+        'fixed left-0 right-0 bottom-0 z-50',
         'bg-white backdrop-blur',
         'border-t-[2px] border-[#F5F5F5] h-[123px] flex items-center justify-center',
         className,

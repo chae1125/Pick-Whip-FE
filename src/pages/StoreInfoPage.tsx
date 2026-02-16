@@ -1,3 +1,6 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
+
 import SectionCard from '../components/store-detail/info/SectionCard'
 import PriceSection, { type PriceRow } from '../components/store-detail/info/PriceSection'
 import SizeSection, { type SizeRow } from '../components/store-detail/info/SizeSection'
@@ -6,54 +9,124 @@ import PaymentSection, { type PaymentMethod } from '../components/store-detail/i
 import NoticeSection from '../components/store-detail/info/NoticeSection'
 import EventSection, { type EventInfo } from '../components/store-detail/info/EventSection'
 
-export default function StoreInfoPage() {
-  const prices: PriceRow[] = [
-    { label: '도시락', price: '35,000원' },
-    { label: '1호', price: '+10,000원' },
-    { label: '2호', price: '+20,000원' },
-  ]
+import { getShopInfo } from '@/apis/shop'
 
-  const sizes: SizeRow[] = [
-    { cm: 10, label: '도시락' },
-    { cm: 15, label: '1호' },
-    { cm: 20, label: '2호' },
-  ]
+function parseCm(diameter: string): number {
+  const only = diameter.replace(/[^\d.]/g, '')
+  const n = Number(only)
+  return Number.isFinite(n) ? n : 0
+}
 
-  const pickup: PickupInfo = {
-    operatingHours: '매일 10:00 - 20:00',
-    pickupTime: '주문 후 최소 2일 소요',
-    sameDayOrder: '재고 케이크 한정 가능',
-    parking: '매장 앞 공영주차장 이용',
+const ALLOWED_PAYMENT_METHODS = new Set<PaymentMethod>([
+  'CARD',
+  'BANK_TRANSFER',
+  'NAVER_PAY',
+  'KAKAO_PAY',
+  'TOSS_PAY',
+])
+
+function toPaymentMethods(raw: string[]): PaymentMethod[] {
+  return raw
+    .map((v) => v.trim())
+    .filter((v): v is PaymentMethod => ALLOWED_PAYMENT_METHODS.has(v as PaymentMethod))
+}
+
+type StoreInfoPageProps = {
+  shopId?: number
+}
+
+export default function StoreInfoPage({ shopId: shopIdProp }: StoreInfoPageProps) {
+  const params = useParams()
+
+  const shopId = useMemo(() => {
+    if (typeof shopIdProp === 'number' && Number.isFinite(shopIdProp) && shopIdProp > 0) {
+      return shopIdProp
+    }
+    const n = Number(params.shopId)
+    return Number.isFinite(n) && n > 0 ? n : 1
+  }, [params.shopId, shopIdProp])
+
+  const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const [prices, setPrices] = useState<PriceRow[]>([])
+  const [sizes, setSizes] = useState<SizeRow[]>([])
+  const [pickup, setPickup] = useState<PickupInfo | null>(null)
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
+  const [notices, setNotices] = useState<string[]>([])
+  const [events, setEvents] = useState<EventInfo[]>([])
+
+  useEffect(() => {
+    const run = async () => {
+      setLoading(true)
+      setErrorMsg(null)
+
+      try {
+        const data = await getShopInfo(shopId)
+
+        setPrices(
+          (data.priceGuides ?? []).map((p) => ({
+            label: p.sizeName,
+            price: p.priceText,
+          })),
+        )
+
+        setSizes(
+          (data.sizeGuides ?? []).map((s) => ({
+            cm: parseCm(s.diameter),
+            label: s.sizeName,
+          })),
+        )
+
+        setPickup({
+          operatingHours: data.pickupInfo?.operationHours ?? '',
+          pickupTime: data.pickupInfo?.pickupNotice ?? '',
+          sameDayOrder: data.pickupInfo?.sameDayOrder ?? '',
+          parking: data.pickupInfo?.parkingInfo ?? '',
+        })
+
+        setPaymentMethods(toPaymentMethods(data.paymentInfo?.paymentMethods ?? []))
+
+        const mergedNotices = [
+          ...(data.precautionNotices ?? []),
+          ...(data.paymentInfo?.paymentNotice ? [data.paymentInfo.paymentNotice] : []),
+          ...(data.paymentInfo?.prepaymentInfo ? [data.paymentInfo.prepaymentInfo] : []),
+        ].filter(Boolean)
+
+        setNotices(mergedNotices)
+
+        const e = data.ongoingEvent
+        const nextEvents: EventInfo[] =
+          e && (e.title || e.content || e.period)
+            ? [
+                {
+                  title: e.title ?? '',
+                  body: e.content ?? '',
+                  period: e.period ?? '',
+                },
+              ]
+            : []
+        setEvents(nextEvents)
+      } catch (e) {
+        setErrorMsg(e instanceof Error ? e.message : '알 수 없는 오류가 발생했습니다.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    run()
+  }, [shopId])
+
+  if (loading) return <main className="bg-[#FCF4F3] min-h-screen" />
+
+  if (errorMsg) {
+    return (
+      <main className="bg-[#FCF4F3] min-h-screen p-6">
+        <p className="text-sm text-gray-700">매장 정보 불러오기에 실패했어요.</p>
+        <p className="mt-1 text-xs text-gray-500">{errorMsg}</p>
+      </main>
+    )
   }
-
-  const paymentMethods: PaymentMethod[] = [
-    'CARD',
-    'BANK_TRANSFER',
-    'NAVER_PAY',
-    'KAKAO_PAY',
-    'TOSS_PAY',
-  ]
-
-  const notices: string[] = [
-    '주문 후 변경은 픽업 2일 전까지 가능합니다.',
-    '생과일 케이크는 당일 소비를 권장합니다.',
-    '알레르기가 있으신 경우 주문 시 꼭 알려주세요.',
-    '픽업 시간을 지키지 못할 경우 사전에 연락 부탁드립니다.',
-    '세부 디자인은 실제와 다소 차이가 있을 수 있습니다.',
-  ]
-
-  const events: EventInfo[] = [
-    {
-      title: '🎉 11월 특별 할인',
-      body: '레터링 케이크 주문 시 10% 할인',
-      period: '2024.11.01 - 11.30',
-    },
-    {
-      title: '🎉 11월 특별 할인',
-      body: '테스트',
-      period: '2024.11.01 - 11.30',
-    },
-  ]
 
   return (
     <main className="bg-[#FCF4F3]">
@@ -66,7 +139,9 @@ export default function StoreInfoPage() {
       </SectionCard>
 
       <SectionCard title="픽업 안내">
-        <PickupSection pickup={pickup} />
+        <PickupSection
+          pickup={pickup ?? { operatingHours: '', pickupTime: '', sameDayOrder: '', parking: '' }}
+        />
       </SectionCard>
 
       <SectionCard title="결제 안내">

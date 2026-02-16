@@ -22,6 +22,7 @@ import { getUserIdFromToken } from '@/utils/auth'
 import PromoBanner from '../assets/img/PromoBanner1.png'
 import PromoBanner2 from '../assets/img/PromoBanner2.png'
 import PromoBanner3 from '../assets/img/PromoBanner3.png'
+import ShopDetailPage from './ShopDetailPage'
 
 const PROMO_ITEMS = [
   {
@@ -42,6 +43,7 @@ const PROMO_ITEMS = [
 ]
 
 export default function Home() {
+  const shopId = 2 // 지금은 임시
   const [params] = useSearchParams()
   const navigate = useNavigate()
 
@@ -60,9 +62,33 @@ export default function Home() {
   const lon = 127
   const userId = getUserIdFromToken() ?? 0
 
+  const [sheetMode, setSheetMode] = useState<'list' | 'detail'>('list')
+  const [selectedShopId, setSelectedShopId] = useState<number | null>(null)
+
   const handleKeywordChange = useCallback((v: string) => setKeyword(v), [])
-  const openSheet = useCallback(() => setIsSheetOpen(true), [])
-  const closeSheet = useCallback(() => setIsSheetOpen(false), [])
+
+  const openSheet = useCallback(() => {
+    setIsSheetOpen(true)
+    setSheetMode('list')
+    setSelectedShopId(null)
+  }, [])
+
+  const closeSheet = useCallback(() => {
+    setIsSheetOpen(false)
+    setSheetMode('list')
+    setSelectedShopId(null)
+  }, [])
+
+  const openDetail = useCallback((id: number) => {
+    setSelectedShopId(id)
+    setSheetMode('detail')
+    setIsSheetOpen(true)
+  }, [])
+
+  const backToList = useCallback(() => {
+    setSheetMode('list')
+    setSelectedShopId(null)
+  }, [])
 
   const sheetDescription = useMemo(
     () => '다가오는 크리스마스,\n마음에 쏙 드는 선물을 찾아보세요!',
@@ -177,18 +203,24 @@ export default function Home() {
         <BottomSheet
           isOpen={isSheetOpen}
           onClose={closeSheet}
-          title="검색 결과"
-          description={sheetDescription}
+          title={sheetMode === 'list' ? '검색 결과' : ''}
+          description={sheetMode === 'list' ? sheetDescription : undefined}
+          sheetBg="#FCF4F3"
         >
-          <StoreCard
-            image=""
-            tags={['크리스마스', '기념일', '파티']}
-            name="스위트 드림즈 베이커리"
-            star={4.25}
-            distance={2.5}
-            minprice={20000}
-            maxprice={100000}
-          />
+          {sheetMode === 'list' ? (
+            <StoreCard
+              image=""
+              tags={['크리스마스', '기념일', '파티']}
+              name="스위트 드림즈 베이커리"
+              star={4.25}
+              distance={2.5}
+              minprice={20000}
+              maxprice={100000}
+              onClick={() => openDetail(shopId)}
+            />
+          ) : (
+            <ShopDetailPage shopId={selectedShopId ?? shopId} onBack={backToList} />
+          )}
         </BottomSheet>
       </div>
     </div>
