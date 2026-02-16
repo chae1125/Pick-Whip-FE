@@ -292,6 +292,53 @@ export async function getNearbyShops(
   return res.data.result
 }
 
+export type ShopSearchItem = {
+  shopId: number
+  shopName: string
+  shopImageUrl: string | null
+  averageRating: number
+  address?: string
+  latitude?: number
+  longitude?: number
+  minPrice?: number | null
+  maxPrice?: number | null
+  keywords?: string[]
+}
+
+export type ShopSearchResult = {
+  content: ShopSearchItem[]
+  totalElements: number
+  totalPages: number
+}
+
+export async function getShopsSearch(params: Record<string, unknown>): Promise<ShopSearchItem[]> {
+  const res = await axios.get<ApiResponse<ShopSearchResult>>('/shops/search', {
+    params,
+    paramsSerializer: serializeParams,
+  })
+
+  if (!res.data.isSuccess || !res.data.result) {
+    throw new Error(res.data.message ?? '가게 검색 실패')
+  }
+
+  const items = res.data.result.content ?? []
+
+  return items.map((it) => ({
+    shopId: Number(it.shopId ?? 0),
+    shopName: it.shopName ?? '',
+    shopImageUrl: it.shopImageUrl ?? null,
+    averageRating:
+      typeof it.averageRating === 'number' ? it.averageRating : Number(it.averageRating ?? 0),
+    address: it.address,
+    latitude:
+      typeof it.latitude === 'number' ? it.latitude : Number(it.latitude ?? it.latitude ?? 0),
+    longitude: typeof it.longitude === 'number' ? it.longitude : Number(it.longitude ?? 0),
+    minPrice: it.minPrice ?? null,
+    maxPrice: it.maxPrice ?? null,
+    keywords: it.keywords ?? [],
+  }))
+}
+
 export type ReviewLikeResult = {
   reviewId: number
   isLike: boolean
