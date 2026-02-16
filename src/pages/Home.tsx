@@ -207,6 +207,9 @@ export default function Home() {
             loading={loading}
             onPrev={() => setPage((p) => Math.max(0, p - 1))}
             onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            onItemClick={(item) => {
+              if (item.shopId) openDetail(item.shopId)
+            }}
           />
         </section>
 
