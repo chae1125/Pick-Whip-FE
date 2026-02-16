@@ -48,6 +48,7 @@ export default function Map() {
   const initialMyLocationRef = useRef<{ lat: number; lng: number } | null>(null)
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null)
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null)
+  const [isLocating, setIsLocating] = useState<boolean>(true)
   const currentRadiusRef = useRef<number>(currentRadius)
 
   const showNearbyPeek = () => {
@@ -73,6 +74,7 @@ export default function Map() {
   }, [currentRadius])
 
   const handleUserLocation = (loc: { lat: number; lng: number } | null) => {
+    setIsLocating(false)
     const base = loc ?? DEFAULT_LOCATION
     setMyLocation(base)
     if (!initialMyLocationRef.current) initialMyLocationRef.current = base
@@ -263,7 +265,7 @@ export default function Map() {
   }
 
   useEffect(() => {
-    if (!isFilterOpen && !isChildSheetOpen) {
+    if (!isFilterOpen && !isChildSheetOpen && !isLocating) {
       showNearbyPeek()
     } else {
       if (nearbyOpenTimerRef.current) {
@@ -272,7 +274,7 @@ export default function Map() {
       }
       setIsNearbyOpen(false)
     }
-  }, [isFilterOpen, isChildSheetOpen])
+  }, [isFilterOpen, isChildSheetOpen, isLocating])
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
