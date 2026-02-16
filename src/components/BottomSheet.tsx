@@ -197,7 +197,7 @@ export function BottomSheet({
             </div>
 
             {!isPeek ? (
-              <div className="flex-1 overflow-y-auto px-6 pb-[calc(env(safe-area-inset-bottom)+10px)]">
+              <div className="flex-1 overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+10px)]">
                 {typeof children === 'function'
                   ? children({ isFull, ratio: sheetHeight.get() / window.innerHeight, isPeek })
                   : children}

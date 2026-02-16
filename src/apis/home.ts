@@ -39,7 +39,10 @@ export type GetDesignGalleryParams = {
 }
 
 export const getDesignGallery = async (params: GetDesignGalleryParams) => {
-  const res = await instance.get<DesignGalleryResponse>('/design/gallery', { params })
+  const res = await instance.get<DesignGalleryResponse>('/design/gallery', {
+    params,
+    headers: { 'x-skip-refresh': '1' },
+  })
   const result = res.data?.result
 
   return {
@@ -68,6 +71,7 @@ export interface TopFiveCakeResponse {
 export const getTopFiveCakes = async (userId: number) => {
   const res = await instance.get<{ result: TopFiveCakeResponse[] }>('/home/popular-cakes/top5', {
     params: { userId },
+    headers: { 'x-skip-refresh': '1' },
   })
   return res.data.result
 }
