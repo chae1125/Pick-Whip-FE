@@ -388,6 +388,31 @@ export async function getReviewDetail(reviewId: number): Promise<ReviewDetailRes
   return res.data.result
 }
 
+// 가게 커스텀 옵션
+export type CustomOptionItem = {
+  optionId: number
+  category: 'SHEET' | 'CREAM' | 'TOPPING' | 'ICING' | 'SHAPE' | string
+  optionName: string
+  additionalPrice: number
+  colorRgbCode?: string | null
+}
+
+export type ShopCustomsResult = {
+  shopId: number
+  cakeSizes: string[]
+  customOptions: CustomOptionItem[]
+}
+
+export async function getShopCustomOptions(shopId: number): Promise<ShopCustomsResult> {
+  const res = await axios.get<ApiResponse<ShopCustomsResult>>(`/customs/${shopId}`)
+
+  if (!res.data.isSuccess || !res.data.result) {
+    throw new Error(res.data.message ?? '가게 커스텀 옵션 조회 실패')
+  }
+
+  return res.data.result
+}
+
 //리뷰 필터 디자인 목록
 export type ReviewFilterDesignItem = {
   designId: number
