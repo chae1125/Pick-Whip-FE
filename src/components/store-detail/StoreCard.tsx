@@ -12,6 +12,8 @@ export interface StoreInfoCard {
   keywords: string[]
 }
 
+export type StoreCardProps = StoreInfoCard & { isPage?: boolean }
+
 export default function StoreCard({
   //shopId,
   shopName,
@@ -22,7 +24,7 @@ export default function StoreCard({
   address,
   phone,
   keywords = [],
-}: StoreInfoCard) {
+}: StoreCardProps) {
   const chips = keywords.map((label) => ({
     label,
     tone: label.includes('당일') ? ('accent' as const) : ('neutral' as const),
@@ -34,7 +36,7 @@ export default function StoreCard({
     'h-[24px] inline-flex items-center gap-1 rounded-[4px] bg-[#FFE1DC] px-2 py-2 text-[12px] text-[#EA113B]'
 
   return (
-    <div className="-mx-4 w-auto overflow-hidden bg-white">
+    <div className="w-auto overflow-hidden bg-white">
       <div className="w-full">
         {shopImageUrl ? (
           <img

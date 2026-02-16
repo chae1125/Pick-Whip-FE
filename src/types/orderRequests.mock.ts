@@ -2,6 +2,7 @@ import type { OrderInfo } from '@/components/order-history/OrderListCard'
 
 export const mockOrderRequests: OrderInfo[] = [
   {
+    orderId: 201,
     imageURL:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS435Vj59gQf7PeVuhLWlidqmAsFNRvdqpnPw&s',
     createdAt: '2025.12.05',
@@ -22,6 +23,7 @@ export const mockOrderRequests: OrderInfo[] = [
     },
   },
   {
+    orderId: 202,
     imageURL:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS435Vj59gQf7PeVuhLWlidqmAsFNRvdqpnPw&s',
     createdAt: '2025.12.05',

@@ -6,9 +6,15 @@ type Props = {
   pick?: Pick
   open: boolean
   onToggle: () => void
+  allergyInfo?: string[] | string | null
 }
 
-export default function OwnersPickSection({ pick, open, onToggle }: Props) {
+export default function OwnersPickSection({ pick, open, onToggle, allergyInfo }: Props) {
+  const allergyDisplay = Array.isArray(allergyInfo)
+    ? allergyInfo.join(', ')
+    : typeof allergyInfo === 'string' && allergyInfo.trim()
+      ? allergyInfo
+      : '-'
   return (
     <>
       <button
@@ -35,16 +41,32 @@ export default function OwnersPickSection({ pick, open, onToggle }: Props) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="mt-2 border-t border-[#57504F] pt-3 text-[12px] text-[#57504F]">
-              <div className="grid grid-cols-2 gap-y-2">
-                <div>모양</div>
-                <div className="text-right">{pick?.shape ?? ''}</div>
-                <div>시트</div>
-                <div className="text-right">{pick?.sheet ?? ''}</div>
-                <div>크림</div>
-                <div className="text-right">{pick?.cream ?? ''}</div>
-                <div>아이싱 컬러</div>
-                <div className="text-right">{pick?.icingColor ?? ''}</div>
+            <div className="mt-2 border-t border-b border-[#57504F] text-[12px] text-[#57504F]">
+              <div className="flex flex-col">
+                <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
+                  <div>모양</div>
+                  <div className="text-right">{pick?.shape ?? ''}</div>
+                </div>
+
+                <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
+                  <div>시트</div>
+                  <div className="text-right">{pick?.sheet ?? ''}</div>
+                </div>
+
+                <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
+                  <div>크림</div>
+                  <div className="text-right">{pick?.cream ?? ''}</div>
+                </div>
+
+                <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
+                  <div>아이싱 컬러</div>
+                  <div className="text-right">{pick?.icingColor ?? ''}</div>
+                </div>
+
+                <div className="flex justify-between items-center py-1">
+                  <div>알러지 성분</div>
+                  <div className="text-right">{allergyDisplay}</div>
+                </div>
               </div>
             </div>
           </motion.div>

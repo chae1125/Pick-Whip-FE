@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Locate } from 'lucide-react'
 
 import { SearchInput } from '../components/input/SearchInput'
@@ -64,6 +64,7 @@ export default function Home() {
 
   const [sheetMode, setSheetMode] = useState<'list' | 'detail'>('list')
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null)
+  const location = useLocation()
 
   const handleKeywordChange = useCallback((v: string) => setKeyword(v), [])
 
@@ -79,11 +80,12 @@ export default function Home() {
     setSelectedShopId(null)
   }, [])
 
-  const openDetail = useCallback((id: number) => {
-    setSelectedShopId(id)
-    setSheetMode('detail')
-    setIsSheetOpen(true)
-  }, [])
+  const openDetail = useCallback(
+    (id: number) => {
+      navigate(`/shop/${id}`)
+    },
+    [navigate],
+  )
 
   const backToList = useCallback(() => {
     setSheetMode('list')
@@ -131,6 +133,25 @@ export default function Home() {
     fetchGallery()
   }, [fetchGallery])
 
+  useEffect(() => {
+    const state = location.state as unknown
+    const openShopId = (
+      state && typeof state === 'object' && 'openShopId' in state
+        ? (state as { openShopId?: number }).openShopId
+        : undefined
+    ) as number | undefined
+
+    if (openShopId) {
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      } catch (e) {
+        console.warn('replaceState failed', e)
+      }
+      openDetail(openShopId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleCategoryChange = (newCategory: CategoryValue) => {
     if (category === newCategory) return
     setCategory(newCategory)
@@ -146,7 +167,12 @@ export default function Home() {
     <div className="mt-14 min-h-screen w-full bg-[#FCF4F3]">
       <div className="container !px-0">
         <section className="px-4 pt-4">
-          <SearchInput value={keyword} onChange={handleKeywordChange} onSubmit={openSheet} />
+          <SearchInput
+            value={keyword}
+            onChange={handleKeywordChange}
+            onSubmit={openSheet}
+            goToMapOnFocus
+          />
         </section>
 
         <section className="mt-4 px-4">
@@ -181,6 +207,9 @@ export default function Home() {
             loading={loading}
             onPrev={() => setPage((p) => Math.max(0, p - 1))}
             onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            onItemClick={(item) => {
+              if (item.shopId) openDetail(item.shopId)
+            }}
           />
         </section>
 

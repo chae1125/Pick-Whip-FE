@@ -10,6 +10,7 @@ export type DesignGalleryItem = {
   minPrice: number | null
   avgRating: number
   myPick: boolean
+  shopId?: number
 }
 
 type DesignGalleryResponse = {
