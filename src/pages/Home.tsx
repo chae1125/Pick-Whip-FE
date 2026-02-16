@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Locate } from 'lucide-react'
 
 import { SearchInput } from '../components/input/SearchInput'
@@ -64,6 +64,7 @@ export default function Home() {
 
   const [sheetMode, setSheetMode] = useState<'list' | 'detail'>('list')
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null)
+  const location = useLocation()
 
   const handleKeywordChange = useCallback((v: string) => setKeyword(v), [])
 
@@ -79,11 +80,12 @@ export default function Home() {
     setSelectedShopId(null)
   }, [])
 
-  const openDetail = useCallback((id: number) => {
-    setSelectedShopId(id)
-    setSheetMode('detail')
-    setIsSheetOpen(true)
-  }, [])
+  const openDetail = useCallback(
+    (id: number) => {
+      navigate(`/shop/${id}`)
+    },
+    [navigate],
+  )
 
   const backToList = useCallback(() => {
     setSheetMode('list')
@@ -130,6 +132,25 @@ export default function Home() {
   useEffect(() => {
     fetchGallery()
   }, [fetchGallery])
+
+  useEffect(() => {
+    const state = location.state as unknown
+    const openShopId = (
+      state && typeof state === 'object' && 'openShopId' in state
+        ? (state as { openShopId?: number }).openShopId
+        : undefined
+    ) as number | undefined
+
+    if (openShopId) {
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      } catch (e) {
+        console.warn('replaceState failed', e)
+      }
+      openDetail(openShopId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleCategoryChange = (newCategory: CategoryValue) => {
     if (category === newCategory) return

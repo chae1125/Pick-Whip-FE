@@ -7,6 +7,7 @@ import AuthLayout from '@/layout/AuthLayout'
 import NotFound from '@/pages/NotFound'
 import Home from '@/pages/Home'
 import Map from '@/pages/Map'
+import ShopDetailRoute from '@/pages/ShopDetailRoute'
 import Login from '@/pages/auth/Login'
 import MainLayout from '@/layout/MainLayout'
 import CustomizeLayout from '@/layout/CustomizeLayout'
@@ -34,6 +35,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'map', element: <Map /> },
+      { path: 'shop/:shopId', element: <ShopDetailRoute /> },
       { path: 'chat', element: <ChatList /> },
       { path: 'order', element: <Order /> },
       { path: 'order/detail', element: <OrderDetailPage /> },
