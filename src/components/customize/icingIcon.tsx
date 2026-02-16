@@ -1,6 +1,8 @@
 type IcingColor = {
   id: number
+  label?: string
   colorCode: string
+  additionalPrice?: number
 }
 
 interface IcingButtonProps {
@@ -16,7 +18,7 @@ export default function IcingButton({ color, selected, onClick }: IcingButtonPro
       className={`
         relative bg-white rounded-2xl p-4
         flex flex-col items-center justify-between
-        h-36 w-32
+        h-40 w-32
         border-2 transition-all
         ${selected ? 'border-[#FF9980]' : 'border-transparent'}
       `}
@@ -86,10 +88,16 @@ export default function IcingButton({ color, selected, onClick }: IcingButtonPro
         </svg>
       </div>
 
-      {/* 라벨 */}
       <div className="flex flex-col items-center justify-center rounded-[42px] px-2.5 border-2 border-[#FF9886] bg-white">
-        <span className="text-sm font-semibold text-[#0D0D0D]">{color.id}번</span>
+        <span className="text-sm font-semibold text-[#0D0D0D]">
+          {color.label ?? `${color.id}번`}
+        </span>
       </div>
+      {color.additionalPrice ? (
+        <span className="text-xs text-[#666] my-2">
+          + {Number(color.additionalPrice).toLocaleString()}원
+        </span>
+      ) : null}
     </button>
   )
 }
