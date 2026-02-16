@@ -1,4 +1,3 @@
-// src/pages/ReviewPage.tsx
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
@@ -15,6 +14,7 @@ import type { ReviewSortKey } from '@/components/store-detail/review/ReviewSortD
 import {
   getReviewSummary,
   getShopReviews,
+  getReviewDetail,
   type ReviewSummaryResult,
   type ShopReviewItem,
   type ShopReviewSort,
@@ -84,7 +84,6 @@ export default function ReviewPage({ shopId: shopIdProp }: ReviewPageProps) {
   const [sortKey, setSortKey] = useState<ReviewSortKey>('latest')
 
   const detail = useReviewDetailModal()
-  type OpenArg = Parameters<typeof detail.openWith>[0]
 
   useEffect(() => {
     setItems([])
@@ -141,7 +140,7 @@ export default function ReviewPage({ shopId: shopIdProp }: ReviewPageProps) {
       setNextCursor(list.nextCursor ?? null)
       setHasNext(!!list.hasNext)
     } catch (e) {
-      console.error(e)
+      setErrorMsg(e instanceof Error ? e.message : '리뷰를 더 불러오지 못했습니다.')
     }
   }
 
@@ -199,23 +198,27 @@ export default function ReviewPage({ shopId: shopIdProp }: ReviewPageProps) {
                 likeCount: r.likeCount ?? 0,
                 createdDate: r.createdDate,
               }}
-              onOpen={() => {
-                const payload = {
-                  reviewId: r.reviewId,
-                  nickname: r.nickname,
-                  profileUrl: r.profileUrl,
-                  rating: r.rating,
-                  option: r.option,
-                  content: r.content,
-                  imageUrls: r.imageUrls ?? [],
-                  keywords: r.keywords ?? [],
-                  isLike: r.isLike,
-                  likeCount: r.likeCount ?? 0,
-                  createdDate: r.createdDate,
-                  ownerReply: null,
-                }
+              onOpen={async () => {
+                try {
+                  const d = await getReviewDetail(r.reviewId)
 
-                detail.openWith(payload as unknown as OpenArg)
+                  const payload = {
+                    reviewId: d.reviewId,
+                    nickname: d.nickname,
+                    profileUrl: d.profileUrl,
+                    rating: d.rating,
+                    content: d.content,
+                    imageUrls: d.imageUrls ?? [],
+                    keywords: d.keywords ?? [],
+                    option: r.option,
+                    createdDate: d.createdDate ?? r.createdDate,
+                    reply: d.reply ?? null,
+                  }
+
+                  detail.openWith(payload)
+                } catch (e) {
+                  setErrorMsg(e instanceof Error ? e.message : '리뷰 상세를 불러오지 못했습니다.')
+                }
               }}
             />
           ))}
@@ -236,6 +239,7 @@ export default function ReviewPage({ shopId: shopIdProp }: ReviewPageProps) {
         {isFilterOpen && (
           <ReviewFilterSheet
             key={String(isFilterOpen)}
+            shopId={shopId}
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
             value={filters}

@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BottomSheet } from '../../BottomSheet'
 import { FilterNavbar } from '../../FilterNavbar'
 import { FilterChipsGroup } from '../../FilterChipsGroup'
 import FilterBottomActions from '../../FilterBottomActions'
+import { getReviewFilterDesigns } from '@/apis/shop'
 import {
   DESIGN_STYLE_OPTIONS,
   SHAPE_OPTIONS,
@@ -29,17 +30,6 @@ const TABS = [
 type TabKey = (typeof TABS)[number]['key']
 const TAB_ITEMS: { key: string; label: string }[] = [...TABS]
 
-const GALLERY_OPTIONS: ChipOption[] = [
-  { value: 'christmas_party', label: '크리스마스 파티 케이크' },
-  { value: 'mini', label: '미니 케이크' },
-]
-// Reuse centralized option lists for consistency
-const STYLE_OPTIONS = DESIGN_STYLE_OPTIONS
-const SHAPE_OPTIONS_LOCAL = SHAPE_OPTIONS
-const BASE_OPTIONS = FLAVOR_OPTIONS
-const TOPPING_OPTIONS = TOPPINGS_OPTIONS
-const SPECIAL_OPTIONS_LOCAL = SPECIAL_OPTIONS
-
 const DEFAULT_FILTERS: ReviewFilters = {
   gallery: [],
   style: [],
@@ -50,11 +40,13 @@ const DEFAULT_FILTERS: ReviewFilters = {
 }
 
 export default function ReviewFilterSheet({
+  shopId,
   isOpen,
   onClose,
   value,
   onApply,
 }: {
+  shopId: number
   isOpen: boolean
   onClose: () => void
   value: ReviewFilters
@@ -62,6 +54,35 @@ export default function ReviewFilterSheet({
 }) {
   const [activeTab, setActiveTab] = useState<TabKey>('gallery')
   const [draft, setDraft] = useState<ReviewFilters>(value)
+
+  const [galleryOptions, setGalleryOptions] = useState<ChipOption[]>([])
+  const [galleryLoading, setGalleryLoading] = useState(false)
+
+  useEffect(() => {
+    setDraft(value)
+  }, [value])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const run = async () => {
+      setGalleryLoading(true)
+      try {
+        const res = await getReviewFilterDesigns(shopId)
+        const opts: ChipOption[] = (res.items ?? []).map((it) => ({
+          value: String(it.designId),
+          label: it.designName,
+        }))
+        setGalleryOptions(opts)
+      } catch {
+        setGalleryOptions([])
+      } finally {
+        setGalleryLoading(false)
+      }
+    }
+
+    run()
+  }, [isOpen, shopId])
 
   const applyDisabled = useMemo(
     () =>
@@ -75,6 +96,7 @@ export default function ReviewFilterSheet({
       ),
     [draft],
   )
+
   const setField = (k: keyof ReviewFilters) => (next: string[]) =>
     setDraft((prev) => ({ ...prev, [k]: next }))
 
@@ -91,10 +113,11 @@ export default function ReviewFilterSheet({
           <div className="space-y-6">
             <FilterChipsGroup
               title="디자인 갤러리"
-              options={GALLERY_OPTIONS}
+              options={galleryOptions}
               value={draft.gallery}
               onChange={setField('gallery')}
             />
+            {galleryLoading && <div className="text-xs text-gray-400">불러오는 중...</div>}
           </div>
         )}
 
@@ -102,31 +125,31 @@ export default function ReviewFilterSheet({
           <div className="space-y-12">
             <FilterChipsGroup
               title="디자인 스타일"
-              options={STYLE_OPTIONS}
+              options={DESIGN_STYLE_OPTIONS}
               value={draft.style}
               onChange={setField('style')}
             />
             <FilterChipsGroup
               title="케이크 형태"
-              options={SHAPE_OPTIONS_LOCAL}
+              options={SHAPE_OPTIONS}
               value={draft.shape}
               onChange={setField('shape')}
             />
             <FilterChipsGroup
               title="맛 / 베이스"
-              options={BASE_OPTIONS}
+              options={FLAVOR_OPTIONS}
               value={draft.base}
               onChange={setField('base')}
             />
             <FilterChipsGroup
               title="토핑 / 데코레이션"
-              options={TOPPING_OPTIONS}
+              options={TOPPINGS_OPTIONS}
               value={draft.topping}
               onChange={setField('topping')}
             />
             <FilterChipsGroup
               title="특별 옵션"
-              options={SPECIAL_OPTIONS_LOCAL}
+              options={SPECIAL_OPTIONS}
               value={draft.special}
               onChange={setField('special')}
             />

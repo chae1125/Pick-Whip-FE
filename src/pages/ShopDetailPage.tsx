@@ -90,7 +90,7 @@ export default function ShopDetailPage({ shopId, onBack, sheetFull }: ShopDetail
           shopImageUrl: data.shopImageUrl,
           averageRating: data.averageRating ?? 0,
           reviewCount: data.reviewCount ?? 0,
-          distance: formatDistanceKm(data.distance ?? null),
+          distance: formatDistanceKm(data.distanceKm ?? null),
           address: data.address,
           phone: data.phone,
           keywords: data.keywords ?? [],
