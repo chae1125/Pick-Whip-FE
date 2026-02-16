@@ -24,6 +24,7 @@ export default function StoreCard({
   address,
   phone,
   keywords = [],
+  isPage = true,
 }: StoreCardProps) {
   const chips = keywords.map((label) => ({
     label,
@@ -36,13 +37,13 @@ export default function StoreCard({
     'h-[24px] inline-flex items-center gap-1 rounded-[4px] bg-[#FFE1DC] px-2 py-2 text-[12px] text-[#EA113B]'
 
   return (
-    <div className="w-auto overflow-hidden bg-white">
-      <div className="w-full">
+    <div className="w-auto overflow-visible bg-white">
+      <div className={isPage ? 'w-full' : '-mx-4'}>
         {shopImageUrl ? (
           <img
             src={shopImageUrl}
             alt={shopName}
-            className="h-auto w-full max-h-[260px] object-cover"
+            className="h-auto w-full max-h-[260px] object-cover block"
             loading="lazy"
           />
         ) : (
