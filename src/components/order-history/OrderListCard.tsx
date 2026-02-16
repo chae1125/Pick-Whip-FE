@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 import type { ProgressStep } from '../order-history/OrderProgressBar'
@@ -8,6 +8,7 @@ import OrderReviewCta from '@/components/order-history/OrderReviewCta'
 import { StatusChip, OrderProgressSection, UnavailableActions } from './UnavailableActions'
 
 export type OrderInfo = {
+  orderId: number
   imageURL: string
   createdAt: string
   storeName: string
@@ -16,6 +17,7 @@ export type OrderInfo = {
   pickupTime: string
   progressLabel: string
   progress: ProgressStep
+  chipText?: string
   previewText?: string
 
   detail?: {
@@ -33,18 +35,6 @@ export type OrderInfo = {
   onClickDetail?: () => void
 }
 
-function chipTextFromProgress(progress: ProgressStep) {
-  const MAP: Record<ProgressStep, string> = {
-    '주문서 완료': '주문서 확인 중',
-    '주문서 확인': '결제 요청 중',
-    '제작 확정': '제작 중',
-    '제작 불가': '제작 불가',
-    '제작 완료': '픽업 대기 중',
-    '픽업 완료': '픽업 완료',
-  }
-  return MAP[progress]
-}
-
 export default function OrderListCard({
   item,
   className,
@@ -59,8 +49,7 @@ export default function OrderListCard({
   showMessageButton?: boolean
 }) {
   const [open, setOpen] = useState(false)
-
-  const chipText = useMemo(() => chipTextFromProgress(item.progress), [item.progress])
+  const chipText = item.chipText ?? item.progressLabel
 
   return (
     <div className={['pt-4 pb-4', className].join(' ')}>
