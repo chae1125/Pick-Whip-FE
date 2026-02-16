@@ -7,9 +7,14 @@ type MockResult = {
   letteringBest: CakeCardItem[]
 }
 
-const mk = (id: number, cakeName: string, price: number, keywords: string[]): CakeCardItem => ({
-  id,
-  imageUrl: `https://picsum.photos/seed/cake-${id}/400/400`,
+const mk = (
+  designId: number,
+  cakeName: string,
+  price: number,
+  keywords: string[],
+): CakeCardItem => ({
+  designId,
+  imageUrl: `https://picsum.photos/seed/cake-${designId}/400/400`,
   cakeName,
   price,
   keywords,

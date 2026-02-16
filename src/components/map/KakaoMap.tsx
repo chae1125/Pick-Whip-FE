@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from 'react'
 import myPickPinIcon from '../../assets/img/myPickPin.svg'
 
@@ -14,9 +14,23 @@ interface MapProps {
   }) => void
   shops?: any[]
   isMyPick?: boolean
+  onMapReady?: () => void
+  onChildSheetOpen?: (open: boolean) => void
+  onUserLocation?: (loc: { lat: number; lng: number } | null) => void
+  center?: { lat: number; lng: number } | null
+  fitBounds?: boolean
 }
 
-export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false }: MapProps) {
+export default function KakaoMap({
+  onBoundsChange,
+  shops = [],
+  isMyPick = false,
+  onMapReady,
+  onChildSheetOpen,
+  onUserLocation,
+  center,
+  fitBounds = false,
+}: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapInstance, setMapInstance] = useState<any>(null)
 
@@ -35,28 +49,36 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
   const closeSheet = () => {
     setIsSheetOpen(false)
     setSelectedShopId(null)
+    onChildSheetOpen?.(false)
   }
 
   const openDetail = (shopId: number) => {
     setSelectedShopId(shopId)
     setIsSheetOpen(true)
+    onChildSheetOpen?.(true)
   }
 
   useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setMyLocation({ lat: position.coords.latitude, lng: position.coords.longitude })
+          const loc = { lat: position.coords.latitude, lng: position.coords.longitude }
+          setMyLocation(loc)
           setIsLoading(false)
+          onUserLocation?.(loc)
         },
         (error) => {
           console.warn('위치 파악 실패(기본 위치 사용):', error)
           setIsLoading(false)
+          onUserLocation?.(null)
         },
-        { enableHighAccuracy: false, timeout: 5000 },
+        { enableHighAccuracy: false, timeout: 7000 },
       )
     } else {
-      setTimeout(() => setIsLoading(false), 0)
+      setTimeout(() => {
+        setIsLoading(false)
+        onUserLocation?.(null)
+      }, 0)
     }
   }, [])
 
@@ -74,6 +96,8 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
       }
       const map = new kakao.maps.Map(container, options)
       setMapInstance(map)
+
+      onMapReady?.()
 
       const myPosition = new kakao.maps.LatLng(myLocation.lat, myLocation.lng)
       const myLocationContent = `
@@ -212,11 +236,39 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
   }, [shops, mapInstance, isMyPick])
 
   useEffect(() => {
+    if (!mapInstance || !center) return
+    const { kakao } = window as any
+    if (!kakao || !kakao.maps) return
+    try {
+      const latlng = new kakao.maps.LatLng(center.lat, center.lng)
+      mapInstance.panTo(latlng)
+    } catch {
+      // ignore
+    }
+  }, [mapInstance, center])
+
+  useEffect(() => {
+    if (!mapInstance || !fitBounds || !shops || shops.length === 0) return
+    const { kakao } = window as any
+    if (!kakao || !kakao.maps) return
+
+    try {
+      const bounds = new kakao.maps.LatLngBounds()
+      shops.forEach((shop: any) => {
+        if (shop.latitude && shop.longitude) {
+          bounds.extend(new kakao.maps.LatLng(shop.latitude, shop.longitude))
+        }
+      })
+      mapInstance.setBounds(bounds)
+    } catch (e) {
+      console.error('fitBounds failed', e)
+    }
+  }, [mapInstance, fitBounds, shops])
+
+  useEffect(() => {
     const handleResize = () => {
       if (mapInstance) {
         mapInstance.relayout()
-        const { kakao } = window as any
-        mapInstance.setCenter(new kakao.maps.LatLng(myLocation.lat, myLocation.lng))
       }
     }
     window.addEventListener('resize', handleResize)
@@ -240,8 +292,18 @@ export default function KakaoMap({ onBoundsChange, shops = [], isMyPick = false 
         style={{ minHeight: '100%' }}
       />
 
-      <BottomSheet isOpen={isSheetOpen} onClose={closeSheet} title="" sheetBg="#FCF4F3">
-        {selectedShopId ? <ShopDetailPage shopId={selectedShopId} onBack={closeSheet} /> : null}
+      <BottomSheet
+        isOpen={isSheetOpen}
+        allowPeek={false}
+        onClose={closeSheet}
+        title=""
+        sheetBg="#FCF4F3"
+      >
+        {({ isFull }) =>
+          selectedShopId ? (
+            <ShopDetailPage shopId={selectedShopId} onBack={closeSheet} sheetFull={isFull} />
+          ) : null
+        }
       </BottomSheet>
     </div>
   )

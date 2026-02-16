@@ -8,7 +8,7 @@ import CustomizeCtaBar from '@/components/store-detail/designGallery/CustomizeCt
 import PickUpDateTimeModal from '@/components/calendar/PickUpDateTimeModal'
 
 type OutletCtx = { store: StoreInfoCard }
-type Props = { store?: StoreInfoCard }
+type Props = { store?: StoreInfoCard; sheetFull?: boolean }
 
 function combinePickupDatetimeISO(date: Date, timeRange: string) {
   const [start] = timeRange.split('~')
@@ -18,7 +18,7 @@ function combinePickupDatetimeISO(date: Date, timeRange: string) {
   return d.toISOString()
 }
 
-export default function DesignGalleryPage({ store: storeProp }: Props) {
+export default function DesignGalleryPage({ store: storeProp, sheetFull }: Props) {
   const navigate = useNavigate()
   const outlet = useOutletContext<OutletCtx | undefined>()
   const store = storeProp ?? outlet?.store
@@ -40,7 +40,7 @@ export default function DesignGalleryPage({ store: storeProp }: Props) {
   return (
     <>
       <DesignGallery shopName={store.shopName} shopId={store.shopId} />
-      <CustomizeCtaBar onClick={openPickup} />
+      <CustomizeCtaBar onClick={openPickup} visible={sheetFull ?? true} />
 
       <PickUpDateTimeModal
         key={resetKey}
