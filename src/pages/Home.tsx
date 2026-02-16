@@ -146,7 +146,12 @@ export default function Home() {
     <div className="mt-14 min-h-screen w-full bg-[#FCF4F3]">
       <div className="container !px-0">
         <section className="px-4 pt-4">
-          <SearchInput value={keyword} onChange={handleKeywordChange} onSubmit={openSheet} />
+          <SearchInput
+            value={keyword}
+            onChange={handleKeywordChange}
+            onSubmit={openSheet}
+            goToMapOnFocus
+          />
         </section>
 
         <section className="mt-4 px-4">
