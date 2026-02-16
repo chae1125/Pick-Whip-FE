@@ -12,6 +12,7 @@ import { getChatMessages } from '@/apis/chat'
 
 // 임시 주문 데이터
 const DUMMY_ORDER_INFO: OrderInfo = {
+  orderId: 1,
   imageURL: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587',
   createdAt: '2025.12.05',
   storeName: '메종 드 가토',

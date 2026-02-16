@@ -192,10 +192,10 @@ export default function DesignGallery({ shopName, shopId: shopIdProp }: DesignGa
           onGoReview={() => setModalOpen(false)}
           shopId={shopId}
           shopName={shopName}
-          onCustomize={({ designId, pickupDatetime }: CustomizeFromModalArgs) => {
+          onCustomize={({ designId, pickupDatetime, cakeName, price }: CustomizeFromModalArgs) => {
             setModalOpen(false)
             navigate(`/customize/${designId}`, {
-              state: { shopId, designId, shopName, pickupDatetime },
+              state: { shopId, designId, shopName, pickupDatetime, cakeName, price },
             })
           }}
         />

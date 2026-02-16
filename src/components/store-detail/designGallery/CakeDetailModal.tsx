@@ -6,6 +6,7 @@ import CakeInfo from '@/components/store-detail/cakeDetails/CakeInfo'
 import OwnersPick from '@/components/store-detail/cakeDetails/OwnersPick'
 import OrderButton from '@/components/store-detail/cakeDetails/OrderButton'
 import PickUpDateTimeModal from '@/components/calendar/PickUpDateTimeModal'
+import { getDesignDetail, type DesignDetailResult } from '@/apis/design'
 
 export type CakeDetailItem = {
   id: number
@@ -26,6 +27,8 @@ export type CustomizeNavState = {
 export type CustomizeFromModalArgs = {
   designId: number
   pickupDatetime: string
+  cakeName?: string
+  price?: number
 }
 
 type Props = {
@@ -86,6 +89,34 @@ export default function CakeDetailModal({
 
   const item = useMemo(() => items[safeIndex], [items, safeIndex])
 
+  const [detail, setDetail] = useState<DesignDetailResult | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    const run = async () => {
+      if (!item || !isOpen) return
+      setDetailLoading(true)
+      setDetailError(null)
+      try {
+        const d = await getDesignDetail(item.id)
+        if (!alive) return
+        setDetail(d)
+      } catch (e) {
+        if (!alive) return
+        setDetailError(e instanceof Error ? e.message : '디자인 정보를 불러오지 못했습니다.')
+      } finally {
+        if (alive) setDetailLoading(false)
+      }
+    }
+
+    run()
+    return () => {
+      alive = false
+    }
+  }, [item, isOpen])
+
   if (!isOpen || !item) return null
 
   return (
@@ -113,9 +144,9 @@ export default function CakeDetailModal({
             <div className="max-h-[280px] overflow-y-auto">
               <div className="px-5 pt-4 pb-4">
                 <CakeInfo
-                  cakeName={item.cakeName}
-                  keywords={item.keywords}
-                  price={item.price}
+                  cakeName={detail?.cakeName ?? item.cakeName}
+                  keywords={detail?.keywords ?? item.keywords}
+                  price={detail?.price ?? item.price}
                   onGoReview={onGoReview}
                 />
 
@@ -123,7 +154,17 @@ export default function CakeDetailModal({
                   pick={item.isOwnersPick}
                   open={pickOpen}
                   onToggle={() => setPickOpen((v) => !v)}
+                  allergyInfo={detail?.allergyInfo ?? null}
                 />
+
+                {detailLoading && (
+                  <p className="text-xs text-gray-500 mt-2">디자인 정보를 불러오는 중...</p>
+                )}
+                {detailError && <p className="text-xs text-red-500 mt-2">{detailError}</p>}
+
+                {detail?.description && (
+                  <div className="mt-3 text-[13px] text-[#6A7282]">{detail.description}</div>
+                )}
 
                 <div className="h-3" />
               </div>
@@ -154,6 +195,8 @@ export default function CakeDetailModal({
           onCustomize?.({
             designId: item.id,
             pickupDatetime,
+            cakeName: detail?.cakeName ?? item.cakeName,
+            price: detail?.price ?? item.price,
           })
         }}
       />

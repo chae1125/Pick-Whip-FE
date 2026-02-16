@@ -2,6 +2,7 @@ import type { OrderInfo } from '@/components/order-history/OrderListCard'
 
 export const mockOrderComplete: OrderInfo[] = [
   {
+    orderId: 101,
     imageURL:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS435Vj59gQf7PeVuhLWlidqmAsFNRvdqpnPw&s',
     createdAt: '2025.12.05',

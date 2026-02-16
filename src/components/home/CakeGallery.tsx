@@ -9,6 +9,7 @@ export default function CakeGallery({
   loading,
   onPrev,
   onNext,
+  onItemClick,
 }: {
   items: DesignGalleryItem[]
   page: number
@@ -16,6 +17,7 @@ export default function CakeGallery({
   loading?: boolean
   onPrev: () => void
   onNext: () => void
+  onItemClick?: (item: DesignGalleryItem) => void
 }) {
   if (loading) {
     return <div className="py-16 text-center text-xs text-gray-400">불러오는 중...</div>
@@ -29,7 +31,16 @@ export default function CakeGallery({
     <div className="mx-auto max-w-[488px] w-full">
       <div className="grid grid-cols-2 gap-6">
         {items.map((it) => (
-          <div key={it.designId} className="flex flex-col py-1">
+          <div
+            key={it.designId}
+            className="flex flex-col py-1 cursor-pointer"
+            onClick={() => onItemClick?.(it)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') onItemClick?.(it)
+            }}
+          >
             <CakeThumbCard
               imageUrl={it.imageUrl}
               isLiked={it.myPick}

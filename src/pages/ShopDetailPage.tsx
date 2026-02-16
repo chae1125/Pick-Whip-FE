@@ -130,11 +130,11 @@ export default function ShopDetailPage({ shopId, onBack, sheetFull }: ShopDetail
             height="h-[66px]"
           />
 
-          <StoreCard {...store} />
+          <StoreCard {...store} isPage={!sheetFull} />
 
           <StoreTabsHeader store={store} activeTab={tab} onChange={handleTabChange} />
 
-          <section className="w-full px-4 pb-6">
+          <section className="w-full px-4 pb-6 bg-[#FCF4F3]">
             {tab === 'design' && <DesignGalleryPage store={store} sheetFull={sheetFull} />}
             {tab === 'info' && <StoreInfoPage shopId={store.shopId} />}
             {tab === 'review' && <ReviewPage shopId={store.shopId} />}
