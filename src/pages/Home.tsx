@@ -248,7 +248,11 @@ export default function Home() {
               onClick={() => openDetail(shopId)}
             />
           ) : (
-            <ShopDetailPage shopId={selectedShopId ?? shopId} onBack={backToList} />
+            <ShopDetailPage
+              shopId={selectedShopId ?? shopId}
+              onBack={backToList}
+              sheetFull={true}
+            />
           )}
         </BottomSheet>
       </div>
