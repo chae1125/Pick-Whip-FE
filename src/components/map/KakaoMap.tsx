@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from 'react'
 import myPickPinIcon from '../../assets/img/myPickPin.svg'
 
@@ -17,6 +17,8 @@ interface MapProps {
   onMapReady?: () => void
   onChildSheetOpen?: (open: boolean) => void
   onUserLocation?: (loc: { lat: number; lng: number } | null) => void
+  center?: { lat: number; lng: number } | null
+  fitBounds?: boolean
 }
 
 export default function KakaoMap({
@@ -26,6 +28,8 @@ export default function KakaoMap({
   onMapReady,
   onChildSheetOpen,
   onUserLocation,
+  center,
+  fitBounds = false,
 }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapInstance, setMapInstance] = useState<any>(null)
@@ -230,6 +234,36 @@ export default function KakaoMap({
       }, 0)
     })
   }, [shops, mapInstance, isMyPick])
+
+  useEffect(() => {
+    if (!mapInstance || !center) return
+    const { kakao } = window as any
+    if (!kakao || !kakao.maps) return
+    try {
+      const latlng = new kakao.maps.LatLng(center.lat, center.lng)
+      mapInstance.panTo(latlng)
+    } catch {
+      // ignore
+    }
+  }, [mapInstance, center])
+
+  useEffect(() => {
+    if (!mapInstance || !fitBounds || !shops || shops.length === 0) return
+    const { kakao } = window as any
+    if (!kakao || !kakao.maps) return
+
+    try {
+      const bounds = new kakao.maps.LatLngBounds()
+      shops.forEach((shop: any) => {
+        if (shop.latitude && shop.longitude) {
+          bounds.extend(new kakao.maps.LatLng(shop.latitude, shop.longitude))
+        }
+      })
+      mapInstance.setBounds(bounds)
+    } catch (e) {
+      console.error('fitBounds failed', e)
+    }
+  }, [mapInstance, fitBounds, shops])
 
   useEffect(() => {
     const handleResize = () => {

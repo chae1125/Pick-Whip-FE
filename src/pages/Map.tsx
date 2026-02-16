@@ -22,9 +22,10 @@ import {
   TOPPINGS_OPTIONS,
   SPECIAL_OPTIONS,
   PURPOSE_OPTIONS,
+  STYLE_TO_API_MAP,
 } from '@/constants/filter'
 import { getShopsInMap } from '@/apis/map'
-import { getNearbyShops, type NearbyShopItem } from '@/apis/shop'
+import { getNearbyShops, getShopsSearch, type NearbyShopItem } from '@/apis/shop'
 import type { MapBounds, MapShop } from '@/apis/map'
 import StoreCard from '@/components/StoreCard'
 import ShopDetailPage from '@/pages/ShopDetailPage'
@@ -37,6 +38,9 @@ export default function Map() {
   const [nearbyLoading, setNearbyLoading] = useState(false)
   const [nearbyError, setNearbyError] = useState<string | null>(null)
   const [currentRadius, setCurrentRadius] = useState<number>(1000)
+  const [isSearchMode, setIsSearchMode] = useState<boolean>(false)
+  const [forcedCenter, setForcedCenter] = useState<{ lat: number; lng: number } | null>(null)
+  const [fitBounds, setFitBounds] = useState<boolean>(false)
   const RADIUS_OPTIONS = [300, 500, 800, 1000, 1500, 3000]
   const [isNearbyOpen, setIsNearbyOpen] = useState(false)
   const [nearbyAllowPeek, setNearbyAllowPeek] = useState(true)
@@ -50,6 +54,7 @@ export default function Map() {
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null)
   const [isLocating, setIsLocating] = useState<boolean>(true)
   const currentRadiusRef = useRef<number>(currentRadius)
+  const isSearchModeRef = useRef<boolean>(false)
 
   const showNearbyPeek = () => {
     if (nearbyOpenTimerRef.current) {
@@ -79,6 +84,160 @@ export default function Map() {
     setMyLocation(base)
     if (!initialMyLocationRef.current) initialMyLocationRef.current = base
     void fetchNearby(base.lat, base.lng, currentRadiusRef.current)
+  }
+
+  const handleSearch = async (kw: string) => {
+    setKeyword(kw)
+    if (!kw || kw.trim() === '') return
+    setIsSearchMode(true)
+    isSearchModeRef.current = true
+    await performSearch({ keyword: kw })
+  }
+
+  function toApiValues(arr: string[]) {
+    return arr.map((v) => STYLE_TO_API_MAP[v] ?? v.toUpperCase())
+  }
+
+  function buildSearchParams(overrides?: { keyword?: string; filters?: FilterState }) {
+    const params: Record<string, unknown> = {
+      page: 0,
+      size: 50,
+      sort: 'createdAt,DESC',
+    }
+
+    const kw = overrides?.keyword ?? keyword
+    const filters = overrides?.filters ?? appliedFilters
+
+    if (kw && kw.trim() !== '') params.keyword = kw
+
+    if (filters.regions?.length) params.city = filters.regions[0]
+    if (filters.hotspots?.length) params.subAreas = filters.hotspots
+
+    if (filters.designStyles?.length) params.styles = toApiValues(filters.designStyles)
+    if (filters.shapes?.length)
+      params.styles = [
+        ...((params.styles as string[] | undefined) ?? []),
+        ...toApiValues(filters.shapes),
+      ]
+    if (filters.flavors?.length)
+      params.styles = [
+        ...((params.styles as string[] | undefined) ?? []),
+        ...toApiValues(filters.flavors),
+      ]
+    if (filters.toppings?.length)
+      params.styles = [
+        ...((params.styles as string[] | undefined) ?? []),
+        ...toApiValues(filters.toppings),
+      ]
+    if (filters.specialOptions?.length)
+      params.styles = [
+        ...((params.styles as string[] | undefined) ?? []),
+        ...toApiValues(filters.specialOptions),
+      ]
+    if (filters.purpose?.length)
+      params.styles = [
+        ...((params.styles as string[] | undefined) ?? []),
+        ...toApiValues(filters.purpose),
+      ]
+
+    if (appliedPriceRange) {
+      if (appliedPriceRange.min) params.minPrice = appliedPriceRange.min
+      if (appliedPriceRange.max) params.maxPrice = appliedPriceRange.max
+    }
+
+    if (appliedPickupDate) params.pickupDate = appliedPickupDate.toISOString().split('T')[0]
+    if (appliedIsTodayPickup) params.isDayOrder = true
+
+    return params
+  }
+
+  async function performSearch(opts?: { keyword?: string; filters?: FilterState }) {
+    setNearbyLoading(true)
+    setNearbyError(null)
+    try {
+      const params = buildSearchParams(opts)
+      const items = await getShopsSearch(params)
+
+      // Set map markers (shops) to search results that have coordinates
+      const mappedShops = items
+        .map((it) => ({
+          shopId: Number(it.shopId),
+          shopName: it.shopName,
+          latitude: Number(it.latitude ?? 0),
+          longitude: Number(it.longitude ?? 0),
+          isPicked: false,
+        }))
+        .filter((s) => Number.isFinite(s.latitude) && Number.isFinite(s.longitude))
+
+      setShops(mappedShops)
+
+      if (mappedShops.length > 0) {
+        setFitBounds(true)
+      }
+
+      const normalized: NearbyShopItem[] = items.map((it) => ({
+        shopId: Number(it.shopId),
+        shopName: it.shopName,
+        shopImageUrl: it.shopImageUrl ?? null,
+        averageRating: it.averageRating ?? 0,
+        reviewCount: undefined,
+        minPrice: it.minPrice ?? undefined,
+        maxPrice: it.maxPrice ?? undefined,
+        distance: 0,
+        tags: it.keywords ?? [],
+        lat: it.latitude ?? 0,
+        lon: it.longitude ?? 0,
+      }))
+
+      setNearbyShops(normalized)
+      setIsNearbyOpen(true)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setNearbyError(msg ?? '검색 실패')
+    } finally {
+      setNearbyLoading(false)
+    }
+  }
+
+  const clearSearchMode = async () => {
+    setIsSearchMode(false)
+    isSearchModeRef.current = false
+    setKeyword('')
+    setFitBounds(false)
+
+    // Reset all filters to initial state
+    setAppliedFilters(INITIAL_FILTERS)
+    setTempFilters(INITIAL_FILTERS)
+    setAppliedPickupDate(INITIAL_DATE)
+    setTempPickupDate(INITIAL_DATE)
+    setAppliedIsTodayPickup(false)
+    setTempIsTodayPickup(false)
+    setAppliedPriceRange(INITIAL_PRICE)
+    setTempPriceRange(INITIAL_PRICE)
+
+    // fetch shops for current viewport bounds (no panning, just update markers)
+    const bounds = mapBoundsRef.current
+    if (bounds) {
+      try {
+        const data = await getShopsInMap(bounds)
+        if (data.isSuccess) {
+          const mapShops = data.result?.shops ?? []
+          setShops(mapShops)
+
+          // also update nearby list for current center
+          const centerLat = (bounds.lowLat + bounds.highLat) / 2
+          const centerLon = (bounds.lowLon + bounds.highLon) / 2
+          const list = await getNearbyShops(centerLat, centerLon, currentRadiusRef.current)
+          setNearbyShops(list)
+          setIsNearbyOpen(true)
+        }
+      } catch (err: unknown) {
+        console.error('Failed to restore viewport mode', err)
+      }
+    }
+
+    // clear forced center last to avoid viewport reset
+    setForcedCenter(null)
   }
 
   const fetchNearby = useCallback(async (lat: number, lon: number, radius: number) => {
@@ -129,6 +288,7 @@ export default function Map() {
 
   const boundsDebounceRef = useRef<number | null>(null)
   const skipBoundsRef = useRef<boolean>(false)
+  const mapBoundsRef = useRef<MapBounds | null>(null)
 
   function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
     const toRad = (v: number) => (v * Math.PI) / 180
@@ -149,6 +309,10 @@ export default function Map() {
   }
 
   const handleBoundsChange = useCallback((bounds: MapBounds) => {
+    // always update last known bounds so we can restore viewport-mode results later
+    mapBoundsRef.current = bounds
+    if (isSearchModeRef.current) return
+
     const centerLat = (bounds.lowLat + bounds.highLat) / 2
     const centerLon = (bounds.lowLon + bounds.highLon) / 2
     setMapCenter({ lat: centerLat, lng: centerLon })
@@ -216,13 +380,47 @@ export default function Map() {
     showNearbyPeek()
   }
 
-  const handleApply = () => {
+  const handleApply = async () => {
     setAppliedFilters(tempFilters)
     setAppliedPickupDate(tempPickupDate)
     setAppliedIsTodayPickup(tempIsTodayPickup)
     setAppliedPriceRange(tempPriceRange)
     setIsFilterOpen(false)
-    showNearbyPeek()
+
+    const isAllFiltersInitial =
+      JSON.stringify(tempFilters) === JSON.stringify(INITIAL_FILTERS) &&
+      tempPickupDate.getTime() === INITIAL_DATE.getTime() &&
+      !tempIsTodayPickup &&
+      tempPriceRange.min === INITIAL_PRICE.min &&
+      tempPriceRange.max === INITIAL_PRICE.max &&
+      !keyword.trim()
+
+    if (isAllFiltersInitial) {
+      setIsSearchMode(false)
+      isSearchModeRef.current = false
+      setFitBounds(false)
+
+      const bounds = mapBoundsRef.current
+      if (bounds) {
+        try {
+          const data = await getShopsInMap(bounds)
+          if (data.isSuccess) {
+            const mapShops = data.result?.shops ?? []
+            setShops(mapShops)
+            const centerLat = (bounds.lowLat + bounds.highLat) / 2
+            const centerLon = (bounds.lowLon + bounds.highLon) / 2
+            const list = await getNearbyShops(centerLat, centerLon, currentRadiusRef.current)
+            setNearbyShops(list)
+          }
+        } catch (err: unknown) {
+          console.error('Failed to fetch viewport shops', err)
+        }
+      }
+    } else {
+      setIsSearchMode(true)
+      isSearchModeRef.current = true
+      await performSearch({ filters: tempFilters, keyword })
+    }
   }
 
   useEffect(() => {
@@ -280,7 +478,14 @@ export default function Map() {
     <div className="relative w-full h-screen overflow-hidden">
       <div className="absolute top-18 left-0 right-0 z-30 pointer-events-none">
         <div className="px-4 py-2 pointer-events-auto">
-          <MapInput value={keyword} onChange={setKeyword} onFilterClick={handleOpenFilter} />
+          <MapInput
+            value={keyword}
+            onChange={setKeyword}
+            onFilterClick={handleOpenFilter}
+            onSearch={handleSearch}
+            isSearchMode={isSearchMode}
+            onClearSearch={clearSearchMode}
+          />
         </div>
 
         <div className="pointer-events-auto px-4 flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
@@ -344,6 +549,8 @@ export default function Map() {
             }
           }}
           onUserLocation={handleUserLocation}
+          center={forcedCenter}
+          fitBounds={fitBounds}
         />
       </div>
 
@@ -512,7 +719,7 @@ export default function Map() {
 
       <BottomSheet
         isOpen={isNearbyOpen}
-        title="가게 목록"
+        title={isSearchMode ? '검색 결과' : '가게 목록'}
         onClose={() => setIsNearbyOpen(false)}
         sheetBg="#FCF4F3"
         allowPeek={nearbyAllowPeek}
@@ -520,21 +727,24 @@ export default function Map() {
       >
         <div className="flex flex-col h-full">
           <div className="flex-1 overflow-y-auto px-4 mt-2 pb-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="text-sm text-[#364153]">
-                주변 <span className="font-semibold">{formatRadiusLabel(currentRadius)}</span> 이내
+            {!isSearchMode && (
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="text-sm text-[#364153]">
+                  주변 <span className="font-semibold">{formatRadiusLabel(currentRadius)}</span>{' '}
+                  이내
+                </div>
+                <div>
+                  <RadiusDropdown
+                    value={currentRadius}
+                    options={RADIUS_OPTIONS}
+                    onChange={(val) => {
+                      setCurrentRadius(val)
+                      handleRadiusChange(val)
+                    }}
+                  />
+                </div>
               </div>
-              <div>
-                <RadiusDropdown
-                  value={currentRadius}
-                  options={RADIUS_OPTIONS}
-                  onChange={(val) => {
-                    setCurrentRadius(val)
-                    handleRadiusChange(val)
-                  }}
-                />
-              </div>
-            </div>
+            )}
 
             {nearbyLoading && (
               <div className="p-4 text-center text-sm text-gray-600">
