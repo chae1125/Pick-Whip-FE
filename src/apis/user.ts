@@ -1,4 +1,5 @@
 import axios from '@/utils/axios'
+import type { FavoriteShopListResponse, FavoriteShopListResult } from '@/types/favorite'
 
 export type MeResult = {
   userId: number
@@ -60,4 +61,30 @@ export const logout = async (userId: number) => {
     params: { userId },
   })
   return res.data
+}
+
+type GetFavoriteShopsParams = {
+  userId: number
+  cursor?: number
+  size?: number
+}
+
+export async function getFavoriteShops(
+  params: GetFavoriteShopsParams,
+): Promise<FavoriteShopListResult> {
+  const { userId, cursor, size = 20 } = params
+
+  const res = await axios.get<FavoriteShopListResponse>('/users/favorites', {
+    params: {
+      userId,
+      cursor,
+      size,
+    },
+  })
+
+  if (!res.data.isSuccess || !res.data.result) {
+    throw new Error(res.data.message ?? '찜한 가게 목록 조회 실패')
+  }
+
+  return res.data.result
 }

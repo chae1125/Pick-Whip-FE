@@ -26,6 +26,7 @@ import DraftsOrderPage from '@/pages/DraftsOrderPage'
 import OrderRequestListPage from '@/pages/OrderRequestListPage'
 import OrderCompleteListPage from '@/pages/OrderCompleteListPage'
 import SignupExtraPage from '@/pages/SignupExtraPage'
+import MyPickPage from '@/pages/MyPickPage'
 
 const router = createBrowserRouter([
   {
@@ -72,6 +73,11 @@ const router = createBrowserRouter([
     path: '/notifications',
     element: <BlankLayout />,
     children: [{ index: true, element: <NotificationPage /> }],
+  },
+  {
+    path: '/mypick',
+    element: <BlankLayout />,
+    children: [{ index: true, element: <MyPickPage /> }],
   },
   {
     path: '/setting',

@@ -204,7 +204,10 @@ export function Header() {
                 icon={<Heart size={18} />}
                 title="마이픽"
                 desc="찜한 가게 · 디자인"
-                onClick={close}
+                onClick={() => {
+                  close()
+                  navigate('/mypick')
+                }}
               />
               <DrawerItem
                 icon={<Clock size={18} />}
