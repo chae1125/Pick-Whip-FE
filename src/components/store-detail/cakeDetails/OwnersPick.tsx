@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
+import type { DesignOption } from '@/types/designgallery'
 
 type Pick = { shape: string; sheet: string; cream: string; icingColor: string }
 
@@ -7,14 +8,43 @@ type Props = {
   open: boolean
   onToggle: () => void
   allergyInfo?: string[] | string | null
+  options?: DesignOption[]
 }
 
-export default function OwnersPickSection({ pick, open, onToggle, allergyInfo }: Props) {
+const categoryLabels: Record<string, string> = {
+  SHAPE: '모양',
+  SHEET: '시트',
+  CREAM: '크림',
+  ICING: '아이싱',
+  TOPPING: '토핑',
+}
+
+export default function OwnersPickSection({
+  pick,
+  open,
+  onToggle,
+  allergyInfo,
+  options = [],
+}: Props) {
   const allergyDisplay = Array.isArray(allergyInfo)
     ? allergyInfo.join(', ')
     : typeof allergyInfo === 'string' && allergyInfo.trim()
       ? allergyInfo
       : '-'
+
+  const optionsByCategory = options.reduce(
+    (acc, option) => {
+      if (!acc[option.category]) {
+        acc[option.category] = []
+      }
+      acc[option.category].push(option)
+      return acc
+    },
+    {} as Record<string, DesignOption[]>,
+  )
+
+  const categoryOrder = ['SHAPE', 'SHEET', 'CREAM', 'ICING', 'TOPPING']
+
   return (
     <>
       <button
@@ -43,25 +73,48 @@ export default function OwnersPickSection({ pick, open, onToggle, allergyInfo }:
           >
             <div className="mt-2 border-t border-b border-[#57504F] text-[12px] text-[#57504F]">
               <div className="flex flex-col">
-                <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
-                  <div>모양</div>
-                  <div className="text-right">{pick?.shape ?? ''}</div>
-                </div>
+                {options.length > 0 ? (
+                  <>
+                    {categoryOrder.map((category) => {
+                      const categoryOptions = optionsByCategory[category]
+                      if (!categoryOptions || categoryOptions.length === 0) return null
 
-                <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
-                  <div>시트</div>
-                  <div className="text-right">{pick?.sheet ?? ''}</div>
-                </div>
+                      return (
+                        <div
+                          key={category}
+                          className="flex justify-between items-center py-1 border-b border-[#57504F] last:border-b-0"
+                        >
+                          <div>{categoryLabels[category] || category}</div>
+                          <div className="text-right">
+                            {categoryOptions.map((opt) => opt.optionName).join(', ')}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
+                      <div>모양</div>
+                      <div className="text-right">{pick?.shape ?? ''}</div>
+                    </div>
 
-                <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
-                  <div>크림</div>
-                  <div className="text-right">{pick?.cream ?? ''}</div>
-                </div>
+                    <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
+                      <div>시트</div>
+                      <div className="text-right">{pick?.sheet ?? ''}</div>
+                    </div>
 
-                <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
-                  <div>아이싱 컬러</div>
-                  <div className="text-right">{pick?.icingColor ?? ''}</div>
-                </div>
+                    <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
+                      <div>크림</div>
+                      <div className="text-right">{pick?.cream ?? ''}</div>
+                    </div>
+
+                    <div className="flex justify-between items-center py-1 border-b border-[#57504F]">
+                      <div>아이싱 컬러</div>
+                      <div className="text-right">{pick?.icingColor ?? ''}</div>
+                    </div>
+                  </>
+                )}
 
                 <div className="flex justify-between items-center py-1">
                   <div>알러지 성분</div>

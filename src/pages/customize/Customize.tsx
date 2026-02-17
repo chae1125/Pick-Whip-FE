@@ -13,6 +13,8 @@ import Header from '@/components/customize/Header'
 import TopSidePreview from '@/components/customize/TopSidePreview'
 import CustomizeBottomSheet from '@/components/customize/CustomizeBottomSheet'
 import { getShopCustomOptions, type CustomOptionItem } from '@/apis/shop'
+import { getDesignDetailForCustomize } from '@/apis/design'
+import type { DesignDetailData } from '@/types/designgallery'
 
 type TabType = '사이즈' | '맛' | '데코' | '추가요청'
 type ViewMode = 'top' | 'side'
@@ -52,6 +54,7 @@ export default function Customize() {
     price?: number
   }
   const shopIdFromState = navState.shopId
+  const designIdFromState = navState.designId
   const cakeNameFromState = navState.cakeName
   const navigate = useNavigate()
 
@@ -59,10 +62,94 @@ export default function Customize() {
   const [apiOptions, setApiOptions] = useState<CustomOptionItem[]>([])
   const [apiLoaded, setApiLoaded] = useState(false)
   const [, setApiError] = useState<string | null>(null)
+  const [, setDesignData] = useState<DesignDetailData | null>(null)
 
   useEffect(() => {
     let alive = true
-    if (!shopIdFromState) return
+    if (!designIdFromState) return
+
+    const run = async () => {
+      setApiLoaded(false)
+      setApiError(null)
+      try {
+        const res = await getDesignDetailForCustomize(Number(designIdFromState))
+        if (!alive) return
+
+        setDesignData(res)
+
+        const customOptions: CustomOptionItem[] = res.availOptions.map((opt, index) => {
+          const matchedOption = res.options.find(
+            (o) => o.category === opt.category && o.optionName === opt.name,
+          )
+
+          return {
+            optionId: matchedOption?.optionId ?? -(index + 1),
+            category: opt.category,
+            optionName: opt.name,
+            additionalPrice: opt.price,
+            colorRgbCode: opt.colorCode,
+          }
+        })
+
+        setApiCakeSizes([res.cakeSize])
+        setApiOptions(customOptions)
+
+        if (res.letteringText) {
+          setLettering(res.letteringText)
+        }
+        if (res.letteringColor) {
+          setLetterColor(res.letteringColor)
+        }
+        if (res.letteringLineCount) {
+          if (res.letteringLineCount === 'TWO_LINE' || res.letteringAlignment === 'CURVE_UP_DOWN') {
+            setLetteringStyle('both-arc')
+          } else if (res.letteringAlignment === 'CURVE_UP') {
+            setLetteringStyle('top-arc')
+          } else {
+            setLetteringStyle('center')
+          }
+        }
+
+        const shapeOption = res.options.find((opt) => opt.category === 'SHAPE')
+        if (shapeOption) {
+          setSelectedShape(shapeOption.optionName)
+        }
+
+        const sheetOption = res.options.find((opt) => opt.category === 'SHEET')
+        if (sheetOption) {
+          setSelectedSheet(sheetOption.optionName)
+        }
+
+        const creamOption = res.options.find((opt) => opt.category === 'CREAM')
+        if (creamOption) {
+          setSelectedCream(creamOption.optionName)
+        }
+
+        const icingOption = res.options.find((opt) => opt.category === 'ICING')
+        if (icingOption) {
+          setSelectedIcingId(icingOption.optionId)
+        }
+
+        const toppingIds = res.toppings.map((t) => t.optionId)
+        setSelectedToppingIds(toppingIds)
+      } catch (e) {
+        if (!alive) return
+        setApiError(e instanceof Error ? e.message : '디자인 정보를 불러오지 못했습니다.')
+      } finally {
+        if (alive) setApiLoaded(true)
+      }
+    }
+
+    run()
+    return () => {
+      alive = false
+    }
+  }, [designIdFromState])
+
+  useEffect(() => {
+    let alive = true
+    if (!shopIdFromState || designIdFromState) return
+
     const run = async () => {
       setApiLoaded(false)
       setApiError(null)
@@ -83,7 +170,7 @@ export default function Customize() {
     return () => {
       alive = false
     }
-  }, [shopIdFromState])
+  }, [shopIdFromState, designIdFromState])
 
   const sizeVisuals: Record<string, { cm: string; circleSize: string; scale: string }> = {
     도시락: { cm: '10cm', circleSize: 'w-10 h-10', scale: 'scale-[0.75]' },
