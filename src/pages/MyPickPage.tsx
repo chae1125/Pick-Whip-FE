@@ -2,9 +2,9 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BackHeader from '@/components/BackHeader'
 import FavoriteShopCard from '@/components/FavoriteShopCard'
-// import { getFavoriteShops } from '@/apis/user'
+import { getFavoriteShops, removeFavoriteShop } from '@/apis/user'
 import type { FavoriteShop } from '@/types/favorite'
-import { mockFavoriteShops } from '@/types/favorite.mock'
+import { getUserIdFromToken } from '@/utils/auth'
 
 type TabKey = 'shop' | 'design'
 type Tab = { key: TabKey; label: string }
@@ -18,6 +18,8 @@ export default function MyPickPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<TabKey>('shop')
   const [shops, setShops] = useState<FavoriteShop[]>([])
+
+  const userId = getUserIdFromToken()
 
   const cursorRef = useRef<number | null>(null)
   const hasNextRef = useRef(true)
@@ -41,31 +43,25 @@ export default function MyPickPage() {
       if (isReset) setInitialLoading(true)
 
       try {
-        // 더미 데이터 사용
-        await new Promise((resolve) => setTimeout(resolve, 500)) // 로딩 시뮬레이션
+        if (!userId) {
+          console.error('로그인이 필요합니다')
+          return
+        }
 
-        const fetched = mockFavoriteShops
-        const nextHasNext = false // 더미 데이터는 한 번에 모두 로드
+        const res = await getFavoriteShops({
+          userId,
+          cursor: isReset ? undefined : (cursorRef.current ?? undefined),
+          size: 20,
+        })
+
+        const fetched = res.shopList
+        const nextHasNext = res.hasNext
 
         setShops((prev) => (isReset ? fetched : [...prev, ...fetched]))
 
-        cursorRef.current = 1
+        cursorRef.current = res.nextCursor
         hasNextRef.current = nextHasNext
         setHasNext(nextHasNext)
-
-        // 실제 API 사용 시:
-        // const userId = Number(localStorage.getItem('userId')) || 1
-        // const res = await getFavoriteShops({
-        //   userId,
-        //   cursor: isReset ? undefined : (cursorRef.current ?? undefined),
-        //   size: 20,
-        // })
-        // const fetched = res.shopList
-        // const nextHasNext = res.hasNext
-        // setShops((prev) => (isReset ? fetched : [...prev, ...fetched]))
-        // cursorRef.current = res.nextCursor
-        // hasNextRef.current = nextHasNext
-        // setHasNext(nextHasNext)
       } catch (error) {
         console.error('찜한 가게 목록 조회 실패:', error)
       } finally {
@@ -74,7 +70,7 @@ export default function MyPickPage() {
         if (isReset) setInitialLoading(false)
       }
     },
-    [tab],
+    [userId],
   )
 
   useEffect(() => {
@@ -105,17 +101,31 @@ export default function MyPickPage() {
     }
   }, [tab, fetchFavoriteShops])
 
-  const handleShopClick = (shopId: number) => {
-    navigate(`/shop/${shopId}`)
-  }
+  const handleShopClick = useCallback(
+    (shopId: number) => {
+      navigate(`/shop/${shopId}`)
+    },
+    [navigate],
+  )
 
-  const handleRemoveFavorite = async (shopId: number) => {
-    // TODO: 찜 해제 API 호출
-    console.log('찜 해제:', shopId)
+  const handleRemoveFavorite = useCallback(
+    async (shopId: number) => {
+      try {
+        if (!userId) {
+          console.error('로그인이 필요합니다')
+          return
+        }
 
-    // 임시로 UI에서 제거
-    setShops((prev) => prev.filter((shop) => shop.shopId !== shopId))
-  }
+        setShops((prev) => prev.filter((shop) => shop.shopId !== shopId))
+
+        await removeFavoriteShop({ shopId, userId })
+      } catch (error) {
+        console.error('찜 해제 실패:', error)
+        fetchFavoriteShops(true)
+      }
+    },
+    [userId, fetchFavoriteShops],
+  )
 
   return (
     <div className="bg-[#FCF4F3]">

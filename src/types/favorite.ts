@@ -21,3 +21,16 @@ export type FavoriteShopListResponse = {
   result: FavoriteShopListResult
   success: boolean
 }
+
+export type FavoriteToggleResult = {
+  shopId: number
+  isFavorited: boolean
+}
+
+export type FavoriteToggleResponse = {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: FavoriteToggleResult
+  success: boolean
+}
