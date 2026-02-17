@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CakeCard from './CakeCard'
 import { addFavoriteDesign, removeFavoriteDesign } from '@/apis/design'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 export type Cake = {
   designId: number
@@ -22,7 +22,11 @@ export default function TopFiveCarousel({ items }: { items: Cake[] }) {
   const [index, setIndex] = useState(0)
   const timerRef = useRef<number | null>(null)
   const [cakes, setCakes] = useState<Cake[]>(items)
-  const userId = getUserIdFromToken()
+  const [userId, setUserId] = useState<number | null>(null)
+
+  useEffect(() => {
+    getUserIdWithCookie().then(setUserId)
+  }, [])
 
   useEffect(() => {
     setCakes(items)

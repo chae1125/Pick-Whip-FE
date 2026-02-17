@@ -15,7 +15,7 @@ import CustomizeBottomSheet from '@/components/customize/CustomizeBottomSheet'
 import { getShopCustomOptions, type CustomOptionItem } from '@/apis/shop'
 import { getDesignDetailForCustomize } from '@/apis/design'
 import { createCustomOrderDraft } from '@/apis/custom'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 import type { DesignDetailData } from '@/types/designgallery'
 
 type TabType = '사이즈' | '맛' | '데코' | '추가요청'
@@ -344,7 +344,7 @@ export default function Customize() {
       return
     }
 
-    const userId = getUserIdFromToken()
+    const userId = await getUserIdWithCookie()
     if (!userId) {
       alert('로그인이 필요합니다.')
       return

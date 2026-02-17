@@ -1,5 +1,5 @@
 import instance from '@/utils/axios'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 export interface MapShop {
   shopId: number
@@ -27,7 +27,7 @@ type MapResponse = {
 }
 
 export const getShopsInMap = async (bounds: MapBounds) => {
-  const userId = getUserIdFromToken() ?? 1 // 테스트면 1 추천(0은 위험)
+  const userId = (await getUserIdWithCookie()) ?? 1 // 테스트면 1 추천(0은 위험)
   const res = await instance.get<MapResponse>('/shops/maps', {
     params: { ...bounds, userId },
   })

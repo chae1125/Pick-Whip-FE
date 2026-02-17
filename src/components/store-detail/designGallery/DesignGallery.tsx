@@ -11,7 +11,7 @@ import CakeDetailModal, {
 
 import { getShopDesignGallery } from '@/apis/shop'
 import { addFavoriteDesign, removeFavoriteDesign } from '@/apis/design'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 type SectionKey = 'all' | 'pick' | 'birth' | 'letter'
 type SectionDef = {
@@ -35,7 +35,11 @@ function hasWord(item: { cakeName: string; keywords?: string[] }, word: string) 
 export default function DesignGallery({ shopName, shopId: shopIdProp }: DesignGalleryProps) {
   const navigate = useNavigate()
   const shopId = shopIdProp ?? 2
-  const userId = getUserIdFromToken()
+  const [userId, setUserId] = useState<number | null>(null)
+
+  useEffect(() => {
+    getUserIdWithCookie().then(setUserId)
+  }, [])
 
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)

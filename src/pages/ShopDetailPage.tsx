@@ -3,7 +3,7 @@ import StoreTabsHeader, { type StoreTabKey } from '../components/store-detail/St
 import StoreCard, { type StoreInfoCard } from '../components/store-detail/StoreCard'
 import { getShopDetail } from '@/apis/shop'
 import { addFavoriteShop, removeFavoriteShop } from '@/apis/user'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 import BackHeader from '@/components/BackHeader'
 import DesignGalleryPage from '../pages/DesignGalleryPage'
 import StoreInfoPage from '../pages/StoreInfoPage'
@@ -58,8 +58,11 @@ export default function ShopDetailPage({ shopId, onBack, sheetFull }: ShopDetail
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [store, setStore] = useState<StoreInfoCard | null>(null)
   const [tab, setTab] = useState<StoreTabKey>('design')
+  const [userId, setUserId] = useState<number | null>(null)
 
-  const userId = getUserIdFromToken()
+  useEffect(() => {
+    getUserIdWithCookie().then(setUserId)
+  }, [])
   const isFetching = useRef(false)
 
   useEffect(() => {
