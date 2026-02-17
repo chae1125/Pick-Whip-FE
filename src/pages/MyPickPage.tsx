@@ -7,7 +7,7 @@ import { getFavoriteShops, removeFavoriteShop } from '@/apis/user'
 import { getFavoriteDesigns, addFavoriteDesign, removeFavoriteDesign } from '@/apis/design'
 import type { FavoriteShop } from '@/types/favorite'
 import type { CakeCardItem } from '@/types/designgallery'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 type TabKey = 'shop' | 'design'
 type Tab = { key: TabKey; label: string }
@@ -22,8 +22,11 @@ export default function MyPickPage() {
   const [tab, setTab] = useState<TabKey>('shop')
   const [shops, setShops] = useState<FavoriteShop[]>([])
   const [designs, setDesigns] = useState<CakeCardItem[]>([])
+  const [userId, setUserId] = useState<number | null>(null)
 
-  const userId = getUserIdFromToken()
+  useEffect(() => {
+    getUserIdWithCookie().then(setUserId)
+  }, [])
 
   const cursorRef = useRef<number | null>(null)
   const hasNextRef = useRef(true)

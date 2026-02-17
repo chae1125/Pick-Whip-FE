@@ -16,7 +16,7 @@ import {
 import { HamburgerButton } from './HamburgerButton'
 import { getMe, logout } from '@/apis/user'
 import { getUnreadCount } from '@/apis/notification'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 export function Header() {
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ export function Header() {
   const toggle = () => (isMounted && isOpen ? close() : open())
 
   const handleLogout = async () => {
-    const userId = getUserIdFromToken()
+    const userId = await getUserIdWithCookie()
 
     if (userId) {
       try {
@@ -51,7 +51,8 @@ export function Header() {
       }
     }
 
-    localStorage.removeItem('accessToken')
+    // 쿠키 기반 인증에서는 로컬 스토리지에서 토큰을 제거하지 않습니다.
+    // 백엔드에서 로그아웃 시 쿠키를 만료시키는 것이 권장됩니다.
     document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 
     setMe(null)
@@ -89,22 +90,26 @@ export function Header() {
     if (!isMounted) return
     if (me) return
 
-    const userId = getUserIdFromToken()
-    if (!userId) {
-      return
+    const fetchUserId = async () => {
+      const userId = await getUserIdWithCookie()
+      if (!userId) {
+        return
+      }
+
+      getMe(userId)
+        .then((data) => {
+          setMe({
+            nickname: data.nickname,
+            email: data.email,
+            profileImageUrl: data.profileImageUrl,
+          })
+        })
+        .catch((e) => {
+          console.error('내 정보 조회 실패', e)
+        })
     }
 
-    getMe(userId)
-      .then((data) => {
-        setMe({
-          nickname: data.nickname,
-          email: data.email,
-          profileImageUrl: data.profileImageUrl,
-        })
-      })
-      .catch((e) => {
-        console.error('내 정보 조회 실패', e)
-      })
+    fetchUserId()
   }, [isMounted, me])
 
   useEffect(() => {

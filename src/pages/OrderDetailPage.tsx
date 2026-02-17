@@ -7,7 +7,7 @@ import ExtraRequest from '@/components/order/ExtraRequest'
 import ConfirmButton from '@/components/order/ConfirmButton'
 import { getDraftDetail, updateDraftPickupTime, createOrder } from '@/apis/custom'
 import type { DraftDetailResult } from '@/types/custom-order'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 export default function OrderDetailPage() {
   const { draftId } = useParams<{ draftId: string }>()
@@ -24,7 +24,7 @@ export default function OrderDetailPage() {
     if (!draftId) return
 
     try {
-      const userId = getUserIdFromToken()
+      const userId = await getUserIdWithCookie()
       if (!userId) {
         alert('로그인이 필요합니다.')
         return

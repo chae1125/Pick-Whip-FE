@@ -18,7 +18,7 @@ import BestCustomOptionSection from '@/components/home/BestCustomOptionSection'
 import { getDesignGallery } from '@/apis/home'
 import type { DesignGalleryItem, DesignSort } from '@/apis/home'
 import { addFavoriteDesign, removeFavoriteDesign } from '@/apis/design'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 import PromoBanner from '../assets/img/PromoBanner1.png'
 import PromoBanner2 from '../assets/img/PromoBanner2.png'
@@ -61,7 +61,11 @@ export default function Home() {
 
   const lat = 37
   const lon = 127
-  const userId = getUserIdFromToken() ?? 0
+  const [userId, setUserId] = useState<number>(0)
+
+  useEffect(() => {
+    getUserIdWithCookie().then((id) => setUserId(id ?? 0))
+  }, [])
 
   const [sheetMode, setSheetMode] = useState<'list' | 'detail'>('list')
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null)
@@ -101,7 +105,7 @@ export default function Home() {
   useEffect(() => {
     const token = params.get('accessToken')
     if (token) {
-      localStorage.setItem('accessToken', token)
+      // 서버가 HttpOnly 쿠키를 설정하는 경우 클라이언트에서 토큰을 저장하지 않습니다.
       navigate('/', { replace: true })
     }
   }, [params, navigate])

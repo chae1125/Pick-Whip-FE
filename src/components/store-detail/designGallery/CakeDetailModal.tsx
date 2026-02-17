@@ -10,7 +10,7 @@ import PickUpDateTimeModal from '@/components/calendar/PickUpDateTimeModal'
 import { getDesignDetailForCustomize } from '@/apis/design'
 import { createCustomOrderDraft } from '@/apis/custom'
 import { getShopCustomOptions } from '@/apis/shop'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 import type { DesignDetailData } from '@/types/designgallery'
 
 export type CakeDetailItem = {
@@ -218,7 +218,7 @@ export default function CakeDetailModal({
           onClose()
 
           if (orderMode === 'direct') {
-            const userId = getUserIdFromToken()
+            const userId = await getUserIdWithCookie()
             if (!userId) {
               alert('로그인이 필요합니다.')
               return

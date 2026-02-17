@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import TopFiveCarousel, { type Cake } from './TopFiveCarousel'
 import { getTopFiveCakes } from '@/apis/home'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 export default function TopFiveSection() {
   const [items, setItems] = useState<Cake[]>([])
+  const [userId, setUserId] = useState<number>(0)
 
-  const userId = getUserIdFromToken() ?? 0
+  useEffect(() => {
+    getUserIdWithCookie().then((id) => setUserId(id ?? 0))
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
