@@ -1,20 +1,32 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import CakeCard from './CakeCard'
+import { addFavoriteDesign, removeFavoriteDesign } from '@/apis/design'
+import { getUserIdFromToken } from '@/utils/auth'
 
 export type Cake = {
+  designId: number
+  shopId: number
   shopName: string
   rating: number
   productName: string
   price: number
   imageUrl: string
+  isLiked: boolean
 }
 
 export default function TopFiveCarousel({ items }: { items: Cake[] }) {
   const len = items.length
+  const navigate = useNavigate()
 
   const [index, setIndex] = useState(0)
   const timerRef = useRef<number | null>(null)
-  const [likedMap, setLikedMap] = useState<Record<number, boolean>>({})
+  const [cakes, setCakes] = useState<Cake[]>(items)
+  const userId = getUserIdFromToken()
+
+  useEffect(() => {
+    setCakes(items)
+  }, [items])
 
   useEffect(() => {
     timerRef.current = window.setInterval(() => {
@@ -24,6 +36,37 @@ export default function TopFiveCarousel({ items }: { items: Cake[] }) {
       if (timerRef.current) window.clearInterval(timerRef.current)
     }
   }, [len])
+
+  const handleToggleLike = useCallback(
+    async (designId: number, currentLiked: boolean) => {
+      if (!userId) {
+        console.error('로그인이 필요합니다')
+        return
+      }
+
+      setCakes((prev) =>
+        prev.map((cake) =>
+          cake.designId === designId ? { ...cake, isLiked: !currentLiked } : cake,
+        ),
+      )
+
+      try {
+        if (currentLiked) {
+          await removeFavoriteDesign({ designId, userId })
+        } else {
+          await addFavoriteDesign({ designId, userId })
+        }
+      } catch (error) {
+        console.error('찜하기 토글 실패:', error)
+        setCakes((prev) =>
+          prev.map((cake) =>
+            cake.designId === designId ? { ...cake, isLiked: currentLiked } : cake,
+          ),
+        )
+      }
+    },
+    [userId],
+  )
 
   const SLIDE_WIDTH = 260
   const GAP = 24
@@ -36,9 +79,9 @@ export default function TopFiveCarousel({ items }: { items: Cake[] }) {
             pl-[calc(50%-130px)] pr-[calc(50%-130px)]"
           style={{ transform: `translateX(-${index * (SLIDE_WIDTH + GAP)}px)` }}
         >
-          {items.map((s, i) => (
+          {cakes.map((s, i) => (
             <div
-              key={i}
+              key={s.designId}
               className="w-[260px] h-[220px] flex-shrink-0 flex items-center justify-center"
             >
               <div className="relative w-[198px] h-[198px]">
@@ -55,13 +98,9 @@ export default function TopFiveCarousel({ items }: { items: Cake[] }) {
                   productName={s.productName}
                   price={s.price}
                   imageUrl={s.imageUrl}
-                  isLiked={!!likedMap[i]}
-                  onToggleLike={() =>
-                    setLikedMap((prev) => ({
-                      ...prev,
-                      [i]: !prev[i],
-                    }))
-                  }
+                  isLiked={s.isLiked}
+                  onToggleLike={() => handleToggleLike(s.designId, s.isLiked)}
+                  onClick={() => navigate(`/shop/${s.shopId}`)}
                 />
               </div>
             </div>

@@ -17,6 +17,7 @@ import BestCustomOptionSection from '@/components/home/BestCustomOptionSection'
 
 import { getDesignGallery } from '@/apis/home'
 import type { DesignGalleryItem, DesignSort } from '@/apis/home'
+import { addFavoriteDesign, removeFavoriteDesign } from '@/apis/design'
 import { getUserIdFromToken } from '@/utils/auth'
 
 import PromoBanner from '../assets/img/PromoBanner1.png'
@@ -163,6 +164,35 @@ export default function Home() {
     setPage(0)
   }
 
+  const handleToggleLike = useCallback(
+    async (item: DesignGalleryItem) => {
+      if (!userId) {
+        console.error('로그인이 필요합니다')
+        return
+      }
+
+      const wasLiked = item.myPick
+
+      setItems((prev) =>
+        prev.map((it) => (it.designId === item.designId ? { ...it, myPick: !wasLiked } : it)),
+      )
+
+      try {
+        if (wasLiked) {
+          await removeFavoriteDesign({ designId: item.designId, userId })
+        } else {
+          await addFavoriteDesign({ designId: item.designId, userId })
+        }
+      } catch (error) {
+        console.error('찜하기 토글 실패:', error)
+        setItems((prev) =>
+          prev.map((it) => (it.designId === item.designId ? { ...it, myPick: wasLiked } : it)),
+        )
+      }
+    },
+    [userId],
+  )
+
   return (
     <div className="mt-14 min-h-screen w-full bg-[#FCF4F3]">
       <div className="container !px-0">
@@ -210,6 +240,7 @@ export default function Home() {
             onItemClick={(item) => {
               if (item.shopId) openDetail(item.shopId)
             }}
+            onToggleLike={handleToggleLike}
           />
         </section>
 

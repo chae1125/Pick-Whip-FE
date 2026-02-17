@@ -10,6 +10,7 @@ export default function CakeGallery({
   onPrev,
   onNext,
   onItemClick,
+  onToggleLike,
 }: {
   items: DesignGalleryItem[]
   page: number
@@ -18,6 +19,7 @@ export default function CakeGallery({
   onPrev: () => void
   onNext: () => void
   onItemClick?: (item: DesignGalleryItem) => void
+  onToggleLike?: (item: DesignGalleryItem) => void
 }) {
   if (loading) {
     return <div className="py-16 text-center text-xs text-gray-400">불러오는 중...</div>
@@ -44,9 +46,7 @@ export default function CakeGallery({
             <CakeThumbCard
               imageUrl={it.imageUrl}
               isLiked={it.myPick}
-              onToggleLike={() => {
-                // TODO: 찜 API 붙일 때 교체
-              }}
+              onToggleLike={() => onToggleLike?.(it)}
             />
 
             <div className="mt-3">

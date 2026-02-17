@@ -8,6 +8,7 @@ type CakeCardProps = {
   imageUrl: string
   isLiked?: boolean
   onToggleLike?: () => void
+  onClick?: () => void
 }
 
 export default function CakeCard({
@@ -18,9 +19,20 @@ export default function CakeCard({
   imageUrl,
   isLiked = false,
   onToggleLike,
+  onClick,
 }: CakeCardProps) {
   return (
-    <div className="group relative w-full overflow-hidden rounded-[10px] rounded-br-none bg-white p-1 shadow-md transition-transform hover:-translate-y-1 hover:shadow-md">
+    <div
+      className="group relative w-full overflow-hidden rounded-[10px] rounded-br-none bg-white p-1 shadow-md transition-transform hover:-translate-y-1 hover:shadow-md cursor-pointer"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onClick?.()
+        }
+      }}
+    >
       <div className="relative aspect-square w-full overflow-hidden rounded-[10px]">
         <img
           src={imageUrl}
@@ -42,6 +54,7 @@ export default function CakeCard({
         <button
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             onToggleLike?.()
           }}
           aria-label="찜하기"

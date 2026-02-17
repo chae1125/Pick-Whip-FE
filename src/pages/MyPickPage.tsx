@@ -2,8 +2,11 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BackHeader from '@/components/BackHeader'
 import FavoriteShopCard from '@/components/FavoriteShopCard'
+import CakeCardGrid from '@/components/store-detail/designGallery/CakeCardGrid'
 import { getFavoriteShops, removeFavoriteShop } from '@/apis/user'
+import { getFavoriteDesigns, addFavoriteDesign, removeFavoriteDesign } from '@/apis/design'
 import type { FavoriteShop } from '@/types/favorite'
+import type { CakeCardItem } from '@/types/designgallery'
 import { getUserIdFromToken } from '@/utils/auth'
 
 type TabKey = 'shop' | 'design'
@@ -18,6 +21,7 @@ export default function MyPickPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<TabKey>('shop')
   const [shops, setShops] = useState<FavoriteShop[]>([])
+  const [designs, setDesigns] = useState<CakeCardItem[]>([])
 
   const userId = getUserIdFromToken()
 
@@ -27,6 +31,7 @@ export default function MyPickPage() {
   const [hasNext, setHasNext] = useState(true)
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [designLoading, setDesignLoading] = useState(true)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const loadingRef = useRef(false)
@@ -73,6 +78,33 @@ export default function MyPickPage() {
     [userId],
   )
 
+  // 디자인 찜 목록 조회
+  const fetchFavoriteDesigns = useCallback(async () => {
+    setDesignLoading(true)
+    try {
+      if (!userId) {
+        console.error('로그인이 필요합니다')
+        return
+      }
+
+      const res = await getFavoriteDesigns(userId)
+      const fetchedDesigns: CakeCardItem[] = res.designs.map((d) => ({
+        designId: d.designId,
+        cakeName: d.cakeName,
+        price: d.price,
+        keywords: d.keywords,
+        imageUrl: d.imageUrl,
+        isLiked: true,
+        shopId: d.shopId,
+      }))
+      setDesigns(fetchedDesigns)
+    } catch (error) {
+      console.error('찜한 디자인 목록 조회 실패:', error)
+    } finally {
+      setDesignLoading(false)
+    }
+  }, [userId])
+
   useEffect(() => {
     const el = loadMoreRef.current
     if (!el) return
@@ -98,8 +130,10 @@ export default function MyPickPage() {
       setHasNext(true)
       setInitialLoading(true)
       fetchFavoriteShops(true)
+    } else if (tab === 'design') {
+      fetchFavoriteDesigns()
     }
-  }, [tab, fetchFavoriteShops])
+  }, [tab, fetchFavoriteShops, fetchFavoriteDesigns])
 
   const handleShopClick = useCallback(
     (shopId: number) => {
@@ -125,6 +159,37 @@ export default function MyPickPage() {
       }
     },
     [userId, fetchFavoriteShops],
+  )
+
+  // 디자인 찜하기 토글
+  const handleToggleDesignLike = useCallback(
+    async (item: CakeCardItem) => {
+      try {
+        if (!userId) {
+          console.error('로그인이 필요합니다')
+          return
+        }
+
+        const wasLiked = item.isLiked
+
+        // 낙관적 업데이트
+        if (wasLiked) {
+          setDesigns((prev) => prev.filter((d) => d.designId !== item.designId))
+        } else {
+          setDesigns((prev) => [...prev, { ...item, isLiked: true }])
+        }
+
+        if (wasLiked) {
+          await removeFavoriteDesign({ designId: item.designId, userId })
+        } else {
+          await addFavoriteDesign({ designId: item.designId, userId })
+        }
+      } catch (error) {
+        console.error('디자인 찜 토글 실패:', error)
+        fetchFavoriteDesigns()
+      }
+    },
+    [userId, fetchFavoriteDesigns],
   )
 
   return (
@@ -197,9 +262,26 @@ export default function MyPickPage() {
             )}
 
             {tab === 'design' && (
-              <div className="py-16 text-center text-[13px] text-gray-400">
-                찜한 디자인 기능은 준비 중입니다
-              </div>
+              <>
+                {designLoading ? (
+                  <div className="py-16 text-center text-xs text-gray-400">불러오는 중...</div>
+                ) : designs.length === 0 ? (
+                  <div className="py-16 text-center text-[13px] text-gray-400">
+                    찜한 디자인이 없습니다
+                  </div>
+                ) : (
+                  <CakeCardGrid
+                    page={designs}
+                    columns={3}
+                    onClickCard={(item) => {
+                      if (item.shopId) {
+                        navigate(`/shop/${item.shopId}`)
+                      }
+                    }}
+                    onToggleLike={handleToggleDesignLike}
+                  />
+                )}
+              </>
             )}
           </div>
         </main>
