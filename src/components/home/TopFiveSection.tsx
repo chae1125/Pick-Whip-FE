@@ -14,11 +14,14 @@ export default function TopFiveSection() {
         const data = await getTopFiveCakes(userId)
 
         const mappedItems: Cake[] = data.map((item) => ({
+          designId: item.designId,
+          shopId: item.shopId,
           shopName: item.shopName,
           rating: item.averageRating,
           productName: item.cakeName,
           price: item.minPrice,
           imageUrl: item.cakeImageUrl,
+          isLiked: item.myPick,
         }))
 
         setItems(mappedItems)

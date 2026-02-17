@@ -1,13 +1,16 @@
 import axios from 'axios'
 import type { AxiosError, AxiosRequestConfig } from 'axios'
 import { AxiosHeaders } from 'axios'
-import { refreshToken } from '@/apis/auth'
 
 type RetryConfig = AxiosRequestConfig & { _retry?: boolean }
 
 const instance = axios.create({
   baseURL: '/api',
 })
+
+const refreshTokenRequest = async () => {
+  return axios.post('/api/users/refresh', {}, { withCredentials: true })
+}
 
 instance.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken')
@@ -78,7 +81,7 @@ instance.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const resp = await refreshToken()
+        const resp = await refreshTokenRequest()
         const newToken = resp.data?.result?.accessToken as string | undefined
         if (!newToken) throw new Error('Refresh did not return accessToken')
 

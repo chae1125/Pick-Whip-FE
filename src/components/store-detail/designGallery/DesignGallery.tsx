@@ -10,6 +10,8 @@ import CakeDetailModal, {
 } from '@/components/store-detail/designGallery/CakeDetailModal'
 
 import { getShopDesignGallery } from '@/apis/shop'
+import { addFavoriteDesign, removeFavoriteDesign } from '@/apis/design'
+import { getUserIdFromToken } from '@/utils/auth'
 
 type SectionKey = 'all' | 'pick' | 'birth' | 'letter'
 type SectionDef = {
@@ -33,6 +35,7 @@ function hasWord(item: { cakeName: string; keywords?: string[] }, word: string) 
 export default function DesignGallery({ shopName, shopId: shopIdProp }: DesignGalleryProps) {
   const navigate = useNavigate()
   const shopId = shopIdProp ?? 2
+  const userId = getUserIdFromToken()
 
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -44,7 +47,6 @@ export default function DesignGallery({ shopName, shopId: shopIdProp }: DesignGa
     birth: 0,
     letter: 0,
   })
-  const [likedMap, setLikedMap] = useState<Record<number, boolean>>({})
 
   const [modalOpen, setModalOpen] = useState(false)
   const [modalItems, setModalItems] = useState<CakeDetailItem[]>([])
@@ -58,7 +60,7 @@ export default function DesignGallery({ shopName, shopId: shopIdProp }: DesignGa
       setErrorMsg(null)
 
       try {
-        const data = await getShopDesignGallery(shopId)
+        const data = await getShopDesignGallery(shopId, userId ?? undefined)
 
         const mapped: CakeCardItem[] = (data.designs ?? []).map((d) => ({
           designId: d.designId,
@@ -66,7 +68,7 @@ export default function DesignGallery({ shopName, shopId: shopIdProp }: DesignGa
           cakeName: d.cakeName ?? '',
           price: d.price ?? 0,
           keywords: d.keywords ?? [],
-          isLiked: false,
+          isLiked: d.myPick ?? false,
         }))
 
         if (alive) setAllDesigns(mapped)
@@ -81,12 +83,9 @@ export default function DesignGallery({ shopName, shopId: shopIdProp }: DesignGa
     return () => {
       alive = false
     }
-  }, [shopId])
+  }, [shopId, userId])
 
-  const withLiked = useCallback(
-    (items: CakeCardItem[]) => items.map((c) => ({ ...c, isLiked: !!likedMap[c.designId] })),
-    [likedMap],
-  )
+  const withLiked = useCallback((items: CakeCardItem[]) => items, [])
 
   const toDetail = useCallback(
     (items: CakeCardItem[]): CakeDetailItem[] =>
@@ -106,9 +105,37 @@ export default function DesignGallery({ shopName, shopId: shopIdProp }: DesignGa
     [],
   )
 
-  const toggleLike = useCallback((designId: number) => {
-    setLikedMap((p) => ({ ...p, [designId]: !p[designId] }))
-  }, [])
+  const toggleLike = useCallback(
+    async (designId: number) => {
+      if (!userId) {
+        console.error('로그인이 필요합니다')
+        return
+      }
+
+      const currentItem = allDesigns.find((d) => d.designId === designId)
+      if (!currentItem) return
+
+      const wasLiked = currentItem.isLiked
+
+      setAllDesigns((prev) =>
+        prev.map((d) => (d.designId === designId ? { ...d, isLiked: !wasLiked } : d)),
+      )
+
+      try {
+        if (wasLiked) {
+          await removeFavoriteDesign({ designId, userId })
+        } else {
+          await addFavoriteDesign({ designId, userId })
+        }
+      } catch (error) {
+        console.error('찜하기 토글 실패:', error)
+        setAllDesigns((prev) =>
+          prev.map((d) => (d.designId === designId ? { ...d, isLiked: wasLiked } : d)),
+        )
+      }
+    },
+    [userId, allDesigns],
+  )
 
   const openFromCards = useCallback(
     (cards: CakeCardItem[], designId: number) => {

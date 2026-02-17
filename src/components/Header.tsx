@@ -160,7 +160,7 @@ export function Header() {
           />
 
           <nav
-            className={`fixed top-0 right-0 z-[60] h-full w-75 bg-white
+            className={`fixed top-0 right-0 z-[100] h-full w-75 bg-white
             ${isOpen ? 'shadow-2xl' : ''}
             flex flex-col transform-gpu transition-transform duration-400 ease-out will-change-transform
             ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
@@ -204,7 +204,10 @@ export function Header() {
                 icon={<Heart size={18} />}
                 title="마이픽"
                 desc="찜한 가게 · 디자인"
-                onClick={close}
+                onClick={() => {
+                  close()
+                  navigate('/mypick')
+                }}
               />
               <DrawerItem
                 icon={<Clock size={18} />}

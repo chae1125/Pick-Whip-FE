@@ -21,6 +21,7 @@ export type ShopDetailResult = {
   keywords: string[]
   lat: number
   lon: number
+  isMyPick: boolean
 }
 
 export async function getShopDetail(
@@ -65,6 +66,11 @@ export async function getShopDetail(
     return []
   }
 
+  const getBoolean = (key: string) => {
+    const v = raw[key]
+    return typeof v === 'boolean' ? v : false
+  }
+
   const normalized: ShopDetailResult = {
     shopId: getNumber('shopId', 'id'),
     shopName: getString('shopName', 'name'),
@@ -104,6 +110,7 @@ export async function getShopDetail(
       }
       return 0
     })(),
+    isMyPick: getBoolean('isMyPick'),
   }
 
   return normalized
@@ -244,14 +251,20 @@ export type ShopDesignItem = {
   price: number
   keywords: string[]
   imageUrl: string
+  myPick?: boolean
 }
 
 export type ShopDesignGalleryResult = {
   designs: ShopDesignItem[]
 }
 
-export async function getShopDesignGallery(shopId: number): Promise<ShopDesignGalleryResult> {
-  const res = await axios.get<ApiResponse<ShopDesignGalleryResult>>(`/design/shop/${shopId}`)
+export async function getShopDesignGallery(
+  shopId: number,
+  userId?: number,
+): Promise<ShopDesignGalleryResult> {
+  const res = await axios.get<ApiResponse<ShopDesignGalleryResult>>(`/design/shop/${shopId}`, {
+    params: userId ? { userId } : undefined,
+  })
 
   if (!res.data.isSuccess || !res.data.result) {
     throw new Error(res.data.message ?? '디자인 갤러리 조회 실패')
