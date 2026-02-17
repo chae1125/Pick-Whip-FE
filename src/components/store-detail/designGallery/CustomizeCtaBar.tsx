@@ -21,7 +21,7 @@ export default function CustomizeCtaBar({
   return (
     <div
       className={[
-        'fixed left-0 right-0 bottom-0 z-50',
+        'fixed left-0 right-0 bottom-0 z-20',
         'bg-white backdrop-blur',
         'border-t-[2px] border-[#F5F5F5] h-[123px] flex items-center justify-center',
         className,

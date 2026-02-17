@@ -160,7 +160,7 @@ export function Header() {
           />
 
           <nav
-            className={`fixed top-0 right-0 z-[60] h-full w-75 bg-white
+            className={`fixed top-0 right-0 z-[100] h-full w-75 bg-white
             ${isOpen ? 'shadow-2xl' : ''}
             flex flex-col transform-gpu transition-transform duration-400 ease-out will-change-transform
             ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}

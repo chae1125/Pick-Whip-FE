@@ -21,7 +21,7 @@ export default function StoreTabsHeader({
 
   return (
     <div className="w-full bg-[#FCF4F3]">
-      <div className="sticky top-0 z-50 bg-[#FCF4F3]">
+      <div className="sticky top-0 z-10 bg-[#FCF4F3]">
         <div className="-mx-4">
           <div className="relative h-[48px]">
             <div className="flex h-full">
