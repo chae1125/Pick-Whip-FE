@@ -9,7 +9,7 @@ export type CakeCardItem = {
 }
 
 export type LetteringLineCount = 'ONE_LINE' | 'TWO_LINE'
-export type LetteringAlignment = 'CENTER' | 'LEFT' | 'RIGHT'
+export type LetteringAlignment = 'CENTER' | 'LEFT' | 'RIGHT' | 'CURVE_UP' | 'CURVE_UP_DOWN'
 export type OptionCategory = 'SHEET' | 'ICING' | 'TOPPING' | 'CREAM' | 'SHAPE'
 
 export type AvailOption = {

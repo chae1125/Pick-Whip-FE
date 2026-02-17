@@ -101,8 +101,10 @@ export default function Customize() {
           setLetterColor(res.letteringColor)
         }
         if (res.letteringLineCount) {
-          if (res.letteringLineCount === 'TWO_LINE') {
+          if (res.letteringLineCount === 'TWO_LINE' || res.letteringAlignment === 'CURVE_UP_DOWN') {
             setLetteringStyle('both-arc')
+          } else if (res.letteringAlignment === 'CURVE_UP') {
+            setLetteringStyle('top-arc')
           } else {
             setLetteringStyle('center')
           }
