@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import StoreTabsHeader, { type StoreTabKey } from '../components/store-detail/StoreTabsHeader'
 import StoreCard, { type StoreInfoCard } from '../components/store-detail/StoreCard'
 import { getShopDetail } from '@/apis/shop'
+import { addFavoriteShop, removeFavoriteShop } from '@/apis/user'
+import { getUserIdFromToken } from '@/utils/auth'
 import BackHeader from '@/components/BackHeader'
 import DesignGalleryPage from '../pages/DesignGalleryPage'
 import StoreInfoPage from '../pages/StoreInfoPage'
@@ -57,6 +59,7 @@ export default function ShopDetailPage({ shopId, onBack, sheetFull }: ShopDetail
   const [store, setStore] = useState<StoreInfoCard | null>(null)
   const [tab, setTab] = useState<StoreTabKey>('design')
 
+  const userId = getUserIdFromToken()
   const isFetching = useRef(false)
 
   useEffect(() => {
@@ -94,6 +97,7 @@ export default function ShopDetailPage({ shopId, onBack, sheetFull }: ShopDetail
           address: data.address,
           phone: data.phone,
           keywords: data.keywords ?? [],
+          isMyPick: data.isMyPick ?? false,
         }
 
         setStore(next)
@@ -111,6 +115,28 @@ export default function ShopDetailPage({ shopId, onBack, sheetFull }: ShopDetail
   const handleTabChange = useCallback((next: StoreTabKey) => {
     setTab(next)
   }, [])
+
+  const handleToggleFavorite = useCallback(async () => {
+    if (!userId || !store) {
+      console.error('로그인이 필요합니다')
+      return
+    }
+
+    const wasLiked = store.isMyPick
+
+    setStore((prev) => (prev ? { ...prev, isMyPick: !wasLiked } : null))
+
+    try {
+      if (wasLiked) {
+        await removeFavoriteShop({ shopId: store.shopId, userId })
+      } else {
+        await addFavoriteShop({ shopId: store.shopId, userId })
+      }
+    } catch (error) {
+      console.error('찜하기 토글 실패:', error)
+      setStore((prev) => (prev ? { ...prev, isMyPick: wasLiked } : null))
+    }
+  }, [userId, store])
 
   return (
     <div className="w-full">
@@ -130,7 +156,7 @@ export default function ShopDetailPage({ shopId, onBack, sheetFull }: ShopDetail
             height="h-[66px]"
           />
 
-          <StoreCard {...store} isPage={!sheetFull} />
+          <StoreCard {...store} isPage={!sheetFull} onToggleFavorite={handleToggleFavorite} />
 
           <StoreTabsHeader store={store} activeTab={tab} onChange={handleTabChange} />
 
