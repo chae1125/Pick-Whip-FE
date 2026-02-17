@@ -1,5 +1,6 @@
 // src/components/store-detail/designGallery/CakeDetailModal.tsx
 import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useCarouselIndex from '@/hooks/useCarouselIndex'
 import ImageSlider from '@/components/store-detail/cakeDetails/ImageSlider'
 import CakeInfo from '@/components/store-detail/cakeDetails/CakeInfo'
@@ -7,6 +8,9 @@ import OwnersPick from '@/components/store-detail/cakeDetails/OwnersPick'
 import OrderButton from '@/components/store-detail/cakeDetails/OrderButton'
 import PickUpDateTimeModal from '@/components/calendar/PickUpDateTimeModal'
 import { getDesignDetailForCustomize } from '@/apis/design'
+import { createCustomOrderDraft } from '@/apis/custom'
+import { getShopCustomOptions } from '@/apis/shop'
+import { getUserIdFromToken } from '@/utils/auth'
 import type { DesignDetailData } from '@/types/designgallery'
 
 export type CakeDetailItem = {
@@ -48,7 +52,15 @@ function combinePickupDatetimeISO(date: Date, timeRange: string) {
   const [hh, mm] = start.split(':').map(Number)
   const d = new Date(date)
   d.setHours(hh || 0, mm || 0, 0, 0)
-  return d.toISOString()
+
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
 }
 
 export default function CakeDetailModal({
@@ -60,7 +72,9 @@ export default function CakeDetailModal({
   shopId,
   onCustomize,
 }: Props) {
+  const navigate = useNavigate()
   const [pickOpen, setPickOpen] = useState(false)
+  const [orderMode, setOrderMode] = useState<'direct' | 'customize'>('customize')
 
   const [pickupOpen, setPickupOpen] = useState(false)
   const [pickupDate, setPickupDate] = useState<Date | null>(null)
@@ -172,7 +186,16 @@ export default function CakeDetailModal({
               </div>
 
               <div className="px-5 pb-5">
-                <OrderButton onOrder={openPickup} onCustomize={openPickup} />
+                <OrderButton
+                  onOrder={() => {
+                    setOrderMode('direct')
+                    openPickup()
+                  }}
+                  onCustomize={() => {
+                    setOrderMode('customize')
+                    openPickup()
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -185,7 +208,7 @@ export default function CakeDetailModal({
         shopId={shopId}
         value={pickupDate}
         timeRange={pickupTimeRange}
-        onConfirm={({ date, timeRange }: { date: Date; timeRange: string }) => {
+        onConfirm={async ({ date, timeRange }: { date: Date; timeRange: string }) => {
           setPickupDate(date)
           setPickupTimeRange(timeRange)
 
@@ -194,12 +217,88 @@ export default function CakeDetailModal({
           closePickup()
           onClose()
 
-          onCustomize?.({
-            designId: item.id,
-            pickupDatetime,
-            cakeName: detail?.cakeName ?? item.cakeName,
-            price: detail?.price ?? item.price,
-          })
+          if (orderMode === 'direct') {
+            const userId = getUserIdFromToken()
+            if (!userId) {
+              alert('로그인이 필요합니다.')
+              return
+            }
+
+            if (!detail) {
+              alert('디자인 정보를 불러오는 중입니다.')
+              return
+            }
+
+            try {
+              const shopCustoms = await getShopCustomOptions(shopId)
+
+              let shopCakeSizeId = 1 // 기본값
+              if (detail.cakeSize === '도시락') {
+                shopCakeSizeId = 11
+              } else if (detail.cakeSize === '1호') {
+                shopCakeSizeId = 12
+              } else if (detail.cakeSize === '2호') {
+                shopCakeSizeId = 13
+              }
+
+              const customOptionIds: number[] = []
+              for (const designOpt of detail.options) {
+                const matched = shopCustoms.customOptions.find(
+                  (shopOpt) =>
+                    shopOpt.category === designOpt.category &&
+                    shopOpt.optionName === designOpt.optionName,
+                )
+                if (matched && matched.optionId > 0) {
+                  customOptionIds.push(matched.optionId)
+                }
+              }
+
+              const toppings = detail.toppings
+                .map((t) => {
+                  const matched = shopCustoms.customOptions.find(
+                    (shopOpt) => shopOpt.category === 'TOPPING' && shopOpt.optionName === t.name,
+                  )
+                  return matched && matched.optionId > 0
+                    ? { optionId: matched.optionId, x: t.x, y: t.y }
+                    : null
+                })
+                .filter((t): t is { optionId: number; x: number; y: number } => t !== null)
+
+              const orderData = {
+                shopId,
+                shopCakeSizeId,
+                pickupDatetime,
+                letteringText: detail.letteringText,
+                letteringLineCount: detail.letteringLineCount,
+                letteringAlignment: detail.letteringAlignment,
+                additionalRequest: null,
+                referenceImageUrl: null,
+                paymentMethod: null,
+                customOptionIds,
+                toppings,
+              }
+
+              if (customOptionIds.length === 0) {
+                alert('주문 가능한 옵션이 없습니다. 다른 디자인을 선택해주세요.')
+                return
+              }
+
+              const result = await createCustomOrderDraft(userId, orderData)
+              navigate(`/order/detail/${result.customId}`, {
+                state: { shopId },
+              })
+            } catch (error) {
+              console.error('주문 임시저장 실패:', error)
+              alert('주문 처리 중 오류가 발생했습니다.')
+            }
+          } else {
+            onCustomize?.({
+              designId: item.id,
+              pickupDatetime,
+              cakeName: detail?.cakeName ?? item.cakeName,
+              price: detail?.price ?? item.price,
+            })
+          }
         }}
       />
     </>
