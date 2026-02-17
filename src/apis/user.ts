@@ -51,13 +51,31 @@ type SaveExtraInfoResponse = {
   success?: boolean
 }
 
-export async function saveExtraInfo(userId: number, body: SaveExtraInfoBody): Promise<void> {
-  const res = await axios.post<SaveExtraInfoResponse>('/users/extra/info', body, {
-    params: { userId },
-  })
+export async function saveExtraInfo(body: SaveExtraInfoBody, userId?: number): Promise<void> {
+  try {
+    const res = await axios.post<SaveExtraInfoResponse>('/users/extra/info', body, {
+      params: userId ? { userId } : undefined,
+    })
 
-  if (!res.data.isSuccess) {
-    throw new Error(res.data.message ?? '추가 정보 저장 실패')
+    if (!res.data.isSuccess) {
+      throw new Error(res.data.message ?? '추가 정보 저장 실패')
+    }
+  } catch (err: unknown) {
+    if (typeof err === 'object' && err !== null && 'response' in err) {
+      const resp = (err as { response?: { status?: number; data?: unknown } }).response
+      if (resp) {
+        const { status, data } = resp
+        console.error('saveExtraInfo server error', { status, data })
+        let message: string | undefined
+        if (typeof data === 'object' && data !== null && 'message' in data) {
+          const m = (data as { message?: unknown }).message
+          if (typeof m === 'string') message = m
+        }
+        throw new Error(message ?? `서버 오류: ${status}`)
+      }
+    }
+    console.error('saveExtraInfo error', err)
+    throw err
   }
 }
 

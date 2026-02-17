@@ -18,8 +18,18 @@ export default function SignupExtraPage() {
   useEffect(() => {
     const checkAuth = async () => {
       const token = params.get('accessToken')
+      const forceExtra =
+        params.get('forceExtra') === 'true' ||
+        params.get('force') === 'true' ||
+        params.get('forceExtra') === '1' ||
+        params.get('force') === '1'
       if (token) {
         navigate('/signup/extra', { replace: true })
+        return
+      }
+
+      if (forceExtra) {
+        setIsCheckingAuth(false)
         return
       }
 
@@ -47,15 +57,21 @@ export default function SignupExtraPage() {
     if (!userId) return alert('로그인이 필요합니다.')
 
     const genderCode = gender === 'MALE' ? '1' : gender === 'FEMALE' ? '2' : '0'
-    const formattedBirthdate = birthdate.substring(2, 8) + genderCode
+    const formattedBirthdate =
+      (birthdate.length >= 6 ? birthdate.substring(0, 6) : birthdate) + genderCode
 
     try {
       setIsSaving(true)
-      await saveExtraInfo(userId, { name, phone, birthdate: formattedBirthdate })
+      await saveExtraInfo({ name, phone, birthdate: formattedBirthdate }, userId ?? undefined)
       navigate('/')
-    } catch (e) {
-      console.error(e)
-      alert('추가 정보 저장에 실패했습니다.')
+    } catch (e: unknown) {
+      console.error('save extra info failed', e)
+      let message: string | undefined
+      if (typeof e === 'object' && e !== null && 'message' in e) {
+        const m = (e as { message?: unknown }).message
+        if (typeof m === 'string') message = m
+      }
+      alert(message ?? '추가 정보 저장에 실패했습니다.')
     } finally {
       setIsSaving(false)
     }
