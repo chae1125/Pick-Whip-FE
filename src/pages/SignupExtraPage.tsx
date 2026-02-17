@@ -18,18 +18,8 @@ export default function SignupExtraPage() {
   useEffect(() => {
     const checkAuth = async () => {
       const token = params.get('accessToken')
-      const forceExtra =
-        params.get('forceExtra') === 'true' ||
-        params.get('force') === 'true' ||
-        params.get('forceExtra') === '1' ||
-        params.get('force') === '1'
       if (token) {
         navigate('/signup/extra', { replace: true })
-        return
-      }
-
-      if (forceExtra) {
-        setIsCheckingAuth(false)
         return
       }
 
@@ -62,7 +52,7 @@ export default function SignupExtraPage() {
 
     try {
       setIsSaving(true)
-      await saveExtraInfo({ name, phone, birthdate: formattedBirthdate }, userId ?? undefined)
+      await saveExtraInfo({ name, phone, birthdate: formattedBirthdate }, userId)
       navigate('/')
     } catch (e: unknown) {
       console.error('save extra info failed', e)

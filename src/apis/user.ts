@@ -51,10 +51,10 @@ type SaveExtraInfoResponse = {
   success?: boolean
 }
 
-export async function saveExtraInfo(body: SaveExtraInfoBody, userId?: number): Promise<void> {
+export async function saveExtraInfo(body: SaveExtraInfoBody, userId: number): Promise<void> {
   try {
     const res = await axios.post<SaveExtraInfoResponse>('/users/extra/info', body, {
-      params: userId ? { userId } : undefined,
+      params: { userId },
     })
 
     if (!res.data.isSuccess) {
