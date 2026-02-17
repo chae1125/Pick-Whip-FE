@@ -5,4 +5,5 @@ export type CakeCardItem = {
   price: number
   keywords: string[]
   isLiked: boolean
+  shopId?: number
 }

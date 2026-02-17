@@ -1,4 +1,4 @@
-import { Star, MapPin, Phone, Cake, CalendarDays, Info } from 'lucide-react'
+import { Star, MapPin, Phone, Cake, CalendarDays, Info, Heart } from 'lucide-react'
 
 export interface StoreInfoCard {
   shopId: number
@@ -10,9 +10,13 @@ export interface StoreInfoCard {
   address: string
   phone: string
   keywords: string[]
+  isMyPick?: boolean
 }
 
-export type StoreCardProps = StoreInfoCard & { isPage?: boolean }
+export type StoreCardProps = StoreInfoCard & {
+  isPage?: boolean
+  onToggleFavorite?: () => void
+}
 
 export default function StoreCard({
   //shopId,
@@ -24,7 +28,9 @@ export default function StoreCard({
   address,
   phone,
   keywords = [],
+  isMyPick = false,
   isPage = true,
+  onToggleFavorite,
 }: StoreCardProps) {
   const chips = keywords.map((label) => ({
     label,
@@ -54,7 +60,21 @@ export default function StoreCard({
       </div>
 
       <div className="bg-[#FCF4F3] px-5 py-5">
-        <p className="!text-[16.5px] !font-bold !text-[#2A2929]">{shopName}</p>
+        <div className="flex items-center justify-between">
+          <p className="!text-[16.5px] !font-bold !text-[#2A2929]">{shopName}</p>
+          <button
+            onClick={onToggleFavorite}
+            className="flex items-center justify-center p-2 -mr-2 transition-transform active:scale-90"
+            aria-label="찜하기"
+          >
+            <Heart
+              size={24}
+              className={`transition-colors ${
+                isMyPick ? 'fill-red-500 text-red-500' : 'text-gray-400'
+              }`}
+            />
+          </button>
+        </div>
 
         <div className="mt-3 flex items-center gap-4 text-[14px] text-[#57504F]">
           <div className="flex items-center gap-1">
