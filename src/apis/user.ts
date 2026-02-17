@@ -135,3 +135,19 @@ export async function removeFavoriteShop(
 
   return res.data.result
 }
+
+export async function checkAuthWithCookie(): Promise<MeResult | null> {
+  try {
+    const res = await axios.get<MeResponse>('/users/me', {
+      withCredentials: true,
+    })
+
+    if (res.data.isSuccess && res.data.result) {
+      return res.data.result
+    }
+    return null
+  } catch {
+    // 401 등 인증 실패 시 null 반환
+    return null
+  }
+}

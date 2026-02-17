@@ -4,12 +4,15 @@ import { AxiosHeaders } from 'axios'
 
 type RetryConfig = AxiosRequestConfig & { _retry?: boolean }
 
+const baseURL = import.meta.env.PROD ? 'https://www.picknwhip.shop/api' : '/api'
+
 const instance = axios.create({
-  baseURL: '/api',
+  baseURL,
+  withCredentials: true,
 })
 
 const refreshTokenRequest = async () => {
-  return axios.post('/api/users/refresh', {}, { withCredentials: true })
+  return axios.post(`${baseURL}/users/refresh`, {}, { withCredentials: true })
 }
 
 instance.interceptors.request.use((config) => {

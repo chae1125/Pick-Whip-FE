@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import BackHeader from '@/components/BackHeader'
-import { getUserIdFromToken } from '@/utils/auth'
+import { getUserIdFromToken, getUserIdWithCookie } from '@/utils/auth'
 import { saveExtraInfo } from '@/apis/user'
 
 export default function SignupExtraPage() {
@@ -13,18 +13,26 @@ export default function SignupExtraPage() {
   const [birthdate, setBirthdate] = useState('')
   const [gender, setGender] = useState('') // Currently unused, but can be added later
   const [isSaving, setIsSaving] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
   useEffect(() => {
-    const token = params.get('accessToken')
-    if (token) {
-      localStorage.setItem('accessToken', token)
-      navigate('/signup/extra', { replace: true })
-      return
+    const checkAuth = async () => {
+      const token = params.get('accessToken')
+      if (token) {
+        localStorage.setItem('accessToken', token)
+        navigate('/signup/extra', { replace: true })
+        return
+      }
+
+      const userId = await getUserIdWithCookie()
+      setIsCheckingAuth(false)
+
+      if (!userId) {
+        navigate('/auth/login', { replace: true })
+      }
     }
 
-    if (!localStorage.getItem('accessToken')) {
-      navigate('/auth/login', { replace: true })
-    }
+    checkAuth()
   }, [params, navigate])
 
   const isPhoneValid = /^010\d{8}$/.test(phone)
@@ -52,6 +60,11 @@ export default function SignupExtraPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  // 인증 확인 중에는 렌더링하지 않음
+  if (isCheckingAuth) {
+    return null
   }
 
   return (

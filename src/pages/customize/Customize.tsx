@@ -14,6 +14,8 @@ import TopSidePreview from '@/components/customize/TopSidePreview'
 import CustomizeBottomSheet from '@/components/customize/CustomizeBottomSheet'
 import { getShopCustomOptions, type CustomOptionItem } from '@/apis/shop'
 import { getDesignDetailForCustomize } from '@/apis/design'
+import { createCustomOrderDraft } from '@/apis/custom'
+import { getUserIdFromToken } from '@/utils/auth'
 import type { DesignDetailData } from '@/types/designgallery'
 
 type TabType = '사이즈' | '맛' | '데코' | '추가요청'
@@ -52,10 +54,12 @@ export default function Customize() {
     shopName?: string
     cakeName?: string
     price?: number
+    pickupDatetime?: string
   }
   const shopIdFromState = navState.shopId
   const designIdFromState = navState.designId
   const cakeNameFromState = navState.cakeName
+  const pickupDatetimeFromState = navState.pickupDatetime
   const navigate = useNavigate()
 
   const [apiCakeSizes, setApiCakeSizes] = useState<string[]>([])
@@ -81,9 +85,11 @@ export default function Customize() {
           const matchedOption = res.options.find(
             (o) => o.category === opt.category && o.optionName === opt.name,
           )
+          const matchedTopping =
+            opt.category === 'TOPPING' ? res.toppings.find((t) => t.name === opt.name) : null
 
           return {
-            optionId: matchedOption?.optionId ?? -(index + 1),
+            optionId: matchedOption?.optionId ?? matchedTopping?.optionId ?? -(index + 1),
             category: opt.category,
             optionName: opt.name,
             additionalPrice: opt.price,
@@ -332,6 +338,136 @@ export default function Customize() {
     setStep('CUSTOMIZE')
   }
 
+  const handleOrderSubmit = async () => {
+    if (!shopIdFromState || !pickupDatetimeFromState) {
+      alert('가게 정보 또는 픽업 시간이 없습니다.')
+      return
+    }
+
+    const userId = getUserIdFromToken()
+    if (!userId) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+
+    try {
+      const shopCustoms = await getShopCustomOptions(Number(shopIdFromState))
+
+      const customOptionIds: number[] = []
+
+      if (selectedSheet) {
+        const matched = shopCustoms.customOptions.find(
+          (opt) => opt.category === 'SHEET' && opt.optionName === selectedSheet,
+        )
+        if (matched && matched.optionId > 0) {
+          customOptionIds.push(matched.optionId)
+        }
+      }
+
+      if (selectedCream) {
+        const matched = shopCustoms.customOptions.find(
+          (opt) => opt.category === 'CREAM' && opt.optionName === selectedCream,
+        )
+        if (matched && matched.optionId > 0) {
+          customOptionIds.push(matched.optionId)
+        }
+      }
+
+      if (selectedIcingId) {
+        const icingFromApi = apiOptions.find(
+          (o) => o.category === 'ICING' && o.optionId === selectedIcingId,
+        )
+        if (icingFromApi) {
+          const matched = shopCustoms.customOptions.find(
+            (opt) => opt.category === 'ICING' && opt.optionName === icingFromApi.optionName,
+          )
+          if (matched && matched.optionId > 0) {
+            customOptionIds.push(matched.optionId)
+          }
+        }
+      }
+
+      if (selectedShape) {
+        const matched = shopCustoms.customOptions.find(
+          (opt) => opt.category === 'SHAPE' && opt.optionName === selectedShape,
+        )
+        if (matched && matched.optionId > 0) {
+          customOptionIds.push(matched.optionId)
+        }
+      }
+
+      const toppings = selectedToppingIds
+        .map((toppingId) => {
+          const toppingFromApi = apiOptions.find(
+            (o) => o.category === 'TOPPING' && o.optionId === toppingId,
+          )
+          if (!toppingFromApi) return null
+
+          const matched = shopCustoms.customOptions.find(
+            (opt) => opt.category === 'TOPPING' && opt.optionName === toppingFromApi.optionName,
+          )
+          return matched && matched.optionId > 0
+            ? { optionId: matched.optionId, x: 0.5, y: 0.5 }
+            : null
+        })
+        .filter((t): t is { optionId: number; x: number; y: number } => t !== null)
+
+      let letteringLineCount: 'ONE_LINE' | 'TWO_LINE' | null = 'ONE_LINE'
+      let letteringAlignment: 'CENTER' | 'CURVE_UP' | 'CURVE_UP_DOWN' | null = 'CENTER'
+
+      if (letteringStyle === 'both-arc') {
+        letteringLineCount = 'TWO_LINE'
+        letteringAlignment = 'CENTER'
+      } else if (letteringStyle === 'top-arc') {
+        letteringLineCount = 'ONE_LINE'
+        letteringAlignment = 'CURVE_UP'
+      } else {
+        letteringLineCount = 'ONE_LINE'
+        letteringAlignment = 'CENTER'
+      }
+
+      let shopCakeSizeId = 1
+      if (selectedSize === '도시락') {
+        shopCakeSizeId = 11
+      } else if (selectedSize === '1호') {
+        shopCakeSizeId = 12
+      } else if (selectedSize === '2호') {
+        shopCakeSizeId = 13
+      }
+
+      const orderData = {
+        shopId: shopIdFromState,
+        shopCakeSizeId,
+        pickupDatetime: pickupDatetimeFromState,
+        letteringText: lettering || null,
+        letteringLineCount,
+        letteringAlignment,
+        additionalRequest:
+          additionalOptions && additionalOptions !== '요청 사항을 입력해주세요.'
+            ? additionalOptions
+            : null,
+        referenceImageUrl: uploadedImage || null,
+        paymentMethod: null,
+        customOptionIds,
+        toppings,
+      }
+
+      if (customOptionIds.length === 0) {
+        alert('주문 가능한 옵션이 없습니다. 옵션을 선택해주세요.')
+        return
+      }
+
+      const result = await createCustomOrderDraft(userId, orderData)
+
+      navigate(`/order/detail/${result.customId}`, {
+        state: { shopId: shopIdFromState },
+      })
+    } catch (error) {
+      console.error('주문 임시저장 실패:', error)
+      alert('주문 처리 중 오류가 발생했습니다.')
+    }
+  }
+
   const LetteringSectionUI = (
     <div className="space-y-10">
       <section>
@@ -503,7 +639,10 @@ export default function Customize() {
       />
 
       <div className="absolute bottom-2 left-0 right-0 px-6 z-100 pointer-events-none">
-        <button className="w-full bg-[#F4A792] text-white py-3 rounded-[50px] font-black text-lg shadow-xl pointer-events-auto active:scale-95 transition-transform">
+        <button
+          onClick={handleOrderSubmit}
+          className="w-full bg-[#F4A792] text-white py-3 rounded-[50px] font-black text-lg shadow-xl pointer-events-auto active:scale-95 transition-transform"
+        >
           이대로 제작하기
         </button>
       </div>

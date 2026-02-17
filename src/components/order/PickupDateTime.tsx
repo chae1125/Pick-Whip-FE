@@ -19,11 +19,41 @@ function addDays(d: Date, days: number) {
   return next
 }
 
-export default function PickupDateTime() {
+type PickupDateTimeProps = {
+  shopId?: number
+  initialPickupDatetime?: string
+  onPickupTimeChange?: (datetime: string) => void
+}
+
+export default function PickupDateTime({
+  shopId,
+  initialPickupDatetime,
+  onPickupTimeChange,
+}: PickupDateTimeProps) {
   const today = useMemo(() => startOfDay(new Date()), [])
 
-  const defaultDate = useMemo(() => addDays(today, 1), [today])
-  const defaultTime = '10:30~11:00'
+  const parsedInitial = useMemo(() => {
+    if (!initialPickupDatetime) return null
+    try {
+      const date = new Date(initialPickupDatetime)
+      const hours = date.getHours()
+      const minutes = date.getMinutes()
+      const endMinutes = minutes + 30
+      const endHours = endMinutes >= 60 ? hours + 1 : hours
+      const finalEndMinutes = endMinutes >= 60 ? endMinutes - 60 : endMinutes
+
+      const timeRange = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}~${String(endHours).padStart(2, '0')}:${String(finalEndMinutes).padStart(2, '0')}`
+      return { date, timeRange }
+    } catch {
+      return null
+    }
+  }, [initialPickupDatetime])
+
+  const defaultDate = useMemo(
+    () => parsedInitial?.date || addDays(today, 1),
+    [today, parsedInitial],
+  )
+  const defaultTime = parsedInitial?.timeRange || '10:30~11:00'
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(defaultDate)
   const [selectedTimeRange, setSelectedTimeRange] = useState<string | null>(defaultTime)
@@ -58,6 +88,7 @@ export default function PickupDateTime() {
       <PickupDateTimeModal
         open={openCalendar}
         onClose={() => setOpenCalendar(false)}
+        shopId={shopId}
         disablePast
         minDate={today}
         initialMonth={selectedDate ?? today}
@@ -67,6 +98,23 @@ export default function PickupDateTime() {
           setSelectedDate(date)
           setSelectedTimeRange(timeRange)
           setOpenCalendar(false)
+
+          if (onPickupTimeChange && date && timeRange) {
+            const [startTime] = timeRange.split('~')
+            const [hours, minutes] = startTime.split(':').map(Number)
+            const datetime = new Date(date)
+            datetime.setHours(hours, minutes, 0, 0)
+
+            const year = datetime.getFullYear()
+            const month = String(datetime.getMonth() + 1).padStart(2, '0')
+            const day = String(datetime.getDate()).padStart(2, '0')
+            const hour = String(datetime.getHours()).padStart(2, '0')
+            const minute = String(datetime.getMinutes()).padStart(2, '0')
+            const second = String(datetime.getSeconds()).padStart(2, '0')
+            const datetimeStr = `${year}-${month}-${day}T${hour}:${minute}:${second}`
+
+            onPickupTimeChange(datetimeStr)
+          }
         }}
       />
     </section>

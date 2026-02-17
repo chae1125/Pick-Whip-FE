@@ -39,3 +39,20 @@ export const isTokenExpired = (): boolean => {
   const now = Math.floor(Date.now() / 1000)
   return now >= expiry
 }
+
+/**
+ * 통합 로그인 확인
+ * 1. localStorage 토큰 확인
+ * 2. 없으면 쿠키 기반 인증 시도 (checkAuthWithCookie)
+ * @returns userId 또는 null
+ */
+export const getUserIdWithCookie = async (): Promise<number | null> => {
+  // 1. localStorage 토큰 먼저 확인
+  const localUserId = getUserIdFromToken()
+  if (localUserId) return localUserId
+
+  // 2. 쿠키 기반 인증 시도
+  const { checkAuthWithCookie } = await import('@/apis/user')
+  const user = await checkAuthWithCookie()
+  return user?.userId ?? null
+}
