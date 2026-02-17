@@ -11,7 +11,7 @@ export default function SignupExtraPage() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [birthdate, setBirthdate] = useState('')
-  const [gender, setGender] = useState('') // Currently unused, but can be added later
+  const [gender, setGender] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
@@ -19,7 +19,6 @@ export default function SignupExtraPage() {
     const checkAuth = async () => {
       const token = params.get('accessToken')
       if (token) {
-        localStorage.setItem('accessToken', token)
         navigate('/signup/extra', { replace: true })
         return
       }
@@ -62,7 +61,6 @@ export default function SignupExtraPage() {
     }
   }
 
-  // 인증 확인 중에는 렌더링하지 않음
   if (isCheckingAuth) {
     return null
   }

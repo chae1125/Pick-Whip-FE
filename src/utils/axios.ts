@@ -15,14 +15,7 @@ const refreshTokenRequest = async () => {
   return axios.post(`${baseURL}/users/refresh`, {}, { withCredentials: true })
 }
 
-instance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken')
-  if (token) {
-    if (!config.headers) config.headers = new AxiosHeaders()
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
+instance.interceptors.request.use((config) => config)
 
 let isRefreshing = false
 
@@ -68,38 +61,23 @@ instance.interceptors.response.use(
       }
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
-          failedQueue.push({
-            resolve: (token: string) => {
-              if (!originalConfig.headers) originalConfig.headers = new AxiosHeaders()
-              ;(originalConfig.headers as AxiosHeaders).set('Authorization', `Bearer ${token}`)
-              originalConfig._retry = true
-              resolve(instance(originalConfig))
-            },
-            reject,
-            config: originalConfig,
-          })
+          failedQueue.push({ resolve, reject, config: originalConfig })
         })
       }
 
       isRefreshing = true
 
       try {
-        const resp = await refreshTokenRequest()
-        const newToken = resp.data?.result?.accessToken as string | undefined
-        if (!newToken) throw new Error('Refresh did not return accessToken')
+        await refreshTokenRequest()
 
-        localStorage.setItem('accessToken', newToken)
-        processQueue(null, newToken)
-
-        if (!originalConfig.headers) originalConfig.headers = new AxiosHeaders()
-        ;(originalConfig.headers as AxiosHeaders).set('Authorization', `Bearer ${newToken}`)
         originalConfig._retry = true
+        const retryRes = await instance(originalConfig)
 
-        return instance(originalConfig)
+        processQueue(null)
+        return retryRes
       } catch (e) {
         processQueue(e)
-        localStorage.removeItem('accessToken')
-        console.warn('refresh failed, not redirecting to login automatically', e)
+        console.warn('refresh failed', e)
         return Promise.reject(e)
       } finally {
         isRefreshing = false
