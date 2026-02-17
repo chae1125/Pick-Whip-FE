@@ -51,8 +51,6 @@ export function Header() {
       }
     }
 
-    // 쿠키 기반 인증에서는 로컬 스토리지에서 토큰을 제거하지 않습니다.
-    // 백엔드에서 로그아웃 시 쿠키를 만료시키는 것이 권장됩니다.
     document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 
     setMe(null)
