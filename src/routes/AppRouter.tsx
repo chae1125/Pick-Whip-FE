@@ -39,7 +39,7 @@ const router = createBrowserRouter([
       { path: 'shop/:shopId', element: <ShopDetailRoute /> },
       { path: 'chat', element: <ChatList /> },
       { path: 'order', element: <Order /> },
-      { path: 'order/detail', element: <OrderDetailPage /> },
+      { path: 'order/detail/:draftId', element: <OrderDetailPage /> },
     ],
   },
   {
