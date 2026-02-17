@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import BackHeader from '@/components/BackHeader'
-import { getUserIdFromToken, getUserIdWithCookie } from '@/utils/auth'
+import { getUserIdWithCookie } from '@/utils/auth'
 import { saveExtraInfo } from '@/apis/user'
 
 export default function SignupExtraPage() {
@@ -44,7 +44,7 @@ export default function SignupExtraPage() {
   const handleSave = async () => {
     if (!canSave) return
 
-    const userId = getUserIdFromToken()
+    const userId = await getUserIdWithCookie()
     if (!userId) return alert('로그인이 필요합니다.')
 
     const genderCode = gender === 'MALE' ? '1' : gender === 'FEMALE' ? '2' : '0'
