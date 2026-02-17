@@ -6,7 +6,8 @@ import CakeInfo from '@/components/store-detail/cakeDetails/CakeInfo'
 import OwnersPick from '@/components/store-detail/cakeDetails/OwnersPick'
 import OrderButton from '@/components/store-detail/cakeDetails/OrderButton'
 import PickUpDateTimeModal from '@/components/calendar/PickUpDateTimeModal'
-import { getDesignDetail, type DesignDetailResult } from '@/apis/design'
+import { getDesignDetailForCustomize } from '@/apis/design'
+import type { DesignDetailData } from '@/types/designgallery'
 
 export type CakeDetailItem = {
   id: number
@@ -89,7 +90,7 @@ export default function CakeDetailModal({
 
   const item = useMemo(() => items[safeIndex], [items, safeIndex])
 
-  const [detail, setDetail] = useState<DesignDetailResult | null>(null)
+  const [detail, setDetail] = useState<DesignDetailData | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState<string | null>(null)
 
@@ -100,7 +101,7 @@ export default function CakeDetailModal({
       setDetailLoading(true)
       setDetailError(null)
       try {
-        const d = await getDesignDetail(item.id)
+        const d = await getDesignDetailForCustomize(item.id)
         if (!alive) return
         setDetail(d)
       } catch (e) {
@@ -155,6 +156,7 @@ export default function CakeDetailModal({
                   open={pickOpen}
                   onToggle={() => setPickOpen((v) => !v)}
                   allergyInfo={detail?.allergyInfo ?? null}
+                  options={detail?.options ?? []}
                 />
 
                 {detailLoading && (

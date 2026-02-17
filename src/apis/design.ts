@@ -5,6 +5,7 @@ import type {
   FavoriteDesignToggleResponse,
   FavoriteDesignToggleResult,
 } from '@/types/favorite'
+import type { DesignDetailData } from '@/types/designgallery'
 
 export type DesignDetailResult = {
   designId: number
@@ -28,6 +29,22 @@ type DesignDetailResponse = {
 export const getDesignDetail = async (designId: number) => {
   const res = await instance.get<DesignDetailResponse>(`/design/${designId}`)
   return res.data?.result ?? null
+}
+
+type DesignDetailForCustomizeResponse = {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: DesignDetailData
+  success: boolean
+}
+
+export const getDesignDetailForCustomize = async (designId: number) => {
+  const res = await instance.get<DesignDetailForCustomizeResponse>(`/design/${designId}`)
+  if (!res.data.isSuccess || !res.data.result) {
+    throw new Error(res.data.message ?? '디자인 정보를 불러오지 못했습니다.')
+  }
+  return res.data.result
 }
 
 export async function getFavoriteDesigns(userId: number): Promise<FavoriteDesignListResult> {
