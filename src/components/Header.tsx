@@ -52,6 +52,8 @@ export function Header() {
     }
 
     localStorage.removeItem('accessToken')
+    document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+
     setMe(null)
     close()
     navigate('/auth/login')
