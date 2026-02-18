@@ -2,9 +2,13 @@ import { motion } from 'framer-motion'
 import { Download } from 'lucide-react'
 import type { SizeItem } from '@/components/customize/SizeCard'
 import type { ReactNode } from 'react'
+import StrawberryTopper from '@/components/home/StrawberryTopper'
+import BlueberryTopper from '@/components/home/BlueberryTopper'
+import OreoTriplet from '@/components/home/OreoTriplet'
 
 type ViewMode = 'top' | 'side'
 type LetterStyle = 'center' | 'top-arc' | 'both-arc'
+type ToppingType = 'strawberry' | 'blueberry' | 'oreo' | 'none'
 
 interface TopSidePreviewProps {
   isSheetOpen: boolean
@@ -21,6 +25,7 @@ interface TopSidePreviewProps {
   lettering: string
   letteringStyle: LetterStyle
   letterColor: string
+  selectedToppings: string[]
   children?: ReactNode
 }
 
@@ -40,7 +45,33 @@ export default function TopSidePreview(props: TopSidePreviewProps) {
     lettering,
     letteringStyle,
     letterColor,
+    selectedToppings,
   } = props
+
+  const getToppingType = (toppingName: string): ToppingType => {
+    const name = toppingName.toLowerCase()
+    if (name.includes('딸기') || name.includes('strawberry')) return 'strawberry'
+    if (name.includes('블루베리') || name.includes('blueberry')) return 'blueberry'
+    if (name.includes('오레오') || name.includes('oreo')) return 'oreo'
+    return 'none'
+  }
+
+  const displayToppings: Array<{ name: string; type: ToppingType }> = selectedToppings
+    .filter((name: string) => {
+      const n = name.toLowerCase()
+      return (
+        n.includes('딸기') ||
+        n.includes('블루베리') ||
+        n.includes('오레오') ||
+        n.includes('strawberry') ||
+        n.includes('blueberry') ||
+        n.includes('oreo')
+      )
+    })
+    .map((name: string) => ({ name, type: getToppingType(name) }))
+    .filter((t: { name: string; type: ToppingType }) => t.type !== 'none')
+
+  const toppingType = displayToppings.length > 0 ? displayToppings[0].type : 'none'
 
   const makeArcPath = (cx: number, cy: number, r: number, dir: 'top' | 'bottom') => {
     const startX = cx - r
@@ -55,7 +86,7 @@ export default function TopSidePreview(props: TopSidePreviewProps) {
       transition={{ type: 'spring', stiffness: 200, damping: 22 }}
       className="flex-none h-[45%] flex flex-col relative z-10"
     >
-      <div className="flex-1 flex flex-col items-center justify-center -mt-8">
+      <div className="flex-1 flex flex-col items-center justify-center -mt-2">
         <div className="relative w-64 h-64 flex items-center justify-center">
           {!isSheetOpen && (
             <div className="absolute -bottom-10 right-0 flex flex-col items-center gap-1">
@@ -93,8 +124,45 @@ export default function TopSidePreview(props: TopSidePreviewProps) {
                         clipPath: shapeClipPath,
                         backgroundColor: currentCakeColor,
                       }}
-                      className="w-48 h-48 shadow-2xl flex items-center justify-center transition-colors"
+                      className="w-48 h-48 shadow-2xl flex items-center justify-center transition-colors relative"
                     >
+                      {toppingType !== 'none' && (
+                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30">
+                          {[...Array(6)].map((_, idx) => {
+                            const angle = idx * 60
+                            const radius = 65
+
+                            if (toppingType === 'oreo') {
+                              return (
+                                <div
+                                  key={idx}
+                                  className="absolute left-1/2 top-1/2 animate-fadeIn"
+                                  style={{
+                                    transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-${radius}px)`,
+                                  }}
+                                >
+                                  <OreoTriplet barW={6} barH={25} gap={2} />
+                                </div>
+                              )
+                            }
+
+                            const x = Math.cos((angle * Math.PI) / 180) * radius
+                            const y = Math.sin((angle * Math.PI) / 180) * radius
+                            return (
+                              <div
+                                key={idx}
+                                className="absolute animate-fadeIn"
+                                style={{
+                                  transform: `translate(${x}px, ${y}px)`,
+                                }}
+                              >
+                                {toppingType === 'strawberry' && <StrawberryTopper size={24} />}
+                                {toppingType === 'blueberry' && <BlueberryTopper size={16} />}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
                       <div className="relative w-full h-full flex items-center justify-center p-6 text-center">
                         {lettering ? (
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
@@ -177,11 +245,29 @@ export default function TopSidePreview(props: TopSidePreviewProps) {
                 <div className="relative w-full h-full flex items-center justify-center animate-fadeIn pt-4 mb-10">
                   <div className="relative w-44 h-40 scale-110">
                     <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-52 h-6 bg-chat-header rounded-sm" />
+                    {toppingType !== 'none' && (
+                      <div className="absolute -top-6 left-0 right-0 h-8 flex items-end justify-center gap-5 pointer-events-none z-50 pb-1">
+                        {[...Array(3)].map((_, idx) => (
+                          <div key={idx} className="animate-fadeIn">
+                            {toppingType === 'strawberry' && <StrawberryTopper size={25} />}
+                            {toppingType === 'blueberry' && <BlueberryTopper size={20} />}
+                            {toppingType === 'oreo' && (
+                              <div style={{ transform: 'rotate(90deg)' }}>
+                                <OreoTriplet barW={5} barH={25} gap={1} />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div
-                      className="absolute inset-0 bg-transparent border-t-6 border-r-6 border-l-6 rounded-t-2xl overflow-hidden flex shadow-lg"
+                      className="absolute inset-0 bg-transparent border-t-6 border-r-6 border-l-6 rounded-t-2xl overflow-visible flex shadow-lg"
                       style={{ borderColor: currentCakeColor }}
                     >
-                      <div className="w-1/2 h-full" style={{ backgroundColor: currentCakeColor }} />
+                      <div
+                        className="w-1/2 h-full relative"
+                        style={{ backgroundColor: currentCakeColor }}
+                      ></div>
                       <div className="w-1/2 h-full flex flex-col p-1 gap-1">
                         {[1, 2, 3].map((i) => (
                           <div key={i} className="flex-1 flex flex-col gap-1">
