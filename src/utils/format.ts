@@ -5,4 +5,16 @@ function formatPhoneForView(digitsRaw: string) {
   return digitsRaw
 }
 
-export { formatPhoneForView }
+function formatBirthdateForView(birthdate: string | null): string {
+  if (!birthdate) return ''
+  if (birthdate.length >= 7) {
+    return birthdate.slice(0, 6)
+  }
+  return birthdate
+}
+
+function formatBirthdateWithGender(birthdate: string, genderCode: 0 | 1 | 2): string {
+  return `${birthdate}${genderCode}`
+}
+
+export { formatPhoneForView, formatBirthdateForView, formatBirthdateWithGender }

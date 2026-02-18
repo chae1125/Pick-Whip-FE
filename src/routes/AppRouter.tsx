@@ -20,6 +20,7 @@ import ChatRoom from '@/pages/chat/ChatRoom'
 import OrderDetailPage from '@/pages/OrderDetailPage'
 import SettingsPage from '@/pages/SettingsPage'
 import EditMyInfoPage from '@/pages/EditMyInfoPage'
+import WithdrawPage from '@/pages/WithdrawPage'
 import PaymentPage from '@/pages/payment/PaymentPage'
 import NotificationPage from '@/pages/NotificationPage'
 import DraftsOrderPage from '@/pages/DraftsOrderPage'
@@ -85,6 +86,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <SettingsPage /> },
       { path: 'edit-my-info', element: <EditMyInfoPage /> },
+      { path: 'withdraw', element: <WithdrawPage /> },
     ],
   },
   {
