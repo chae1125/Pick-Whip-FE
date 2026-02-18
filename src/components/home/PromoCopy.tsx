@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import homeBackground from '../../assets/img/homeBackground.png'
 import promoCopyImg from '../../assets/img/promoCopyImg.png'
 
 export default function PromoCopy() {
   const [visible, setVisible] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const el = document.getElementById('promo-copy-section')
@@ -111,8 +113,11 @@ export default function PromoCopy() {
             </p>
           </div>
 
-          <button className="rounded-[50px] px-14 py-3 !text-[16px] !font-semibold text-black border-[1.5px] border-[var(--color-sub-brown-200)]">
-            케이크 디자인 둘러보기
+          <button
+            className="rounded-[50px] px-14 py-3 !text-[16px] !font-semibold text-black border-[1.5px] border-[var(--color-sub-brown-200)]"
+            onClick={() => navigate('/map')}
+          >
+            케이크샵 탐색하기
           </button>
         </div>
       </div>

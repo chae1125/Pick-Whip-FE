@@ -46,6 +46,7 @@ export default function SettingsPage() {
         <div className="mt-4 rounded-[9px] border border-[#FFC9C9] bg-white shadow-sm overflow-hidden">
           <button
             type="button"
+            onClick={() => navigate('withdraw')}
             className="w-full px-4 py-3 min-h-[49px] flex items-center justify-between"
           >
             <div className="flex items-center gap-3">

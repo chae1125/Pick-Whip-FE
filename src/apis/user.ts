@@ -37,6 +37,36 @@ export async function getMe(userId: number): Promise<MeResult> {
   return res.data.result
 }
 
+type UpdateMeBody = {
+  nickname?: string
+  profileImageUrl?: string
+}
+
+type UpdateMeResult = {
+  userId: number
+  updatedAt: string
+}
+
+type UpdateMeResponse = {
+  isSuccess: boolean
+  code: string
+  message: string
+  result: UpdateMeResult
+  success: boolean
+}
+
+export async function updateMe(body: UpdateMeBody, userId: number): Promise<UpdateMeResult> {
+  const res = await axios.patch<UpdateMeResponse>('/users/me', body, {
+    params: { userId },
+  })
+
+  if (!res.data.isSuccess || !res.data.result) {
+    throw new Error(res.data.message ?? '내 정보 수정 실패')
+  }
+
+  return res.data.result
+}
+
 type SaveExtraInfoBody = {
   name: string
   phone: string
@@ -167,5 +197,26 @@ export async function checkAuthWithCookie(): Promise<MeResult | null> {
   } catch {
     // 401 등 인증 실패 시 null 반환
     return null
+  }
+}
+
+type WithdrawUserBody = {
+  reasons: string[]
+  feedback: string
+}
+
+type WithdrawUserResponse = {
+  isSuccess: boolean
+  code: string
+  message: string
+  result?: unknown
+  success: boolean
+}
+
+export async function withdrawUser(body: WithdrawUserBody): Promise<void> {
+  const res = await axios.post<WithdrawUserResponse>('/users/withdraw', body)
+
+  if (!res.data.isSuccess) {
+    throw new Error(res.data.message ?? '회원 탈퇴 실패')
   }
 }
