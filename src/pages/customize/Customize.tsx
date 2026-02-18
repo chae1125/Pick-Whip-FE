@@ -636,6 +636,9 @@ export default function Customize() {
         lettering={lettering}
         letteringStyle={letteringStyle}
         letterColor={letterColor}
+        selectedToppings={toppingsToUse
+          .filter((t) => selectedToppingIds.includes(t.id))
+          .map((t) => t.label)}
       />
 
       <div className="absolute bottom-2 left-0 right-0 px-6 z-100 pointer-events-none">
