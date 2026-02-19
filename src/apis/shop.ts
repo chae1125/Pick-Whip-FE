@@ -410,9 +410,14 @@ export type CustomOptionItem = {
   colorRgbCode?: string | null
 }
 
+export type CakeSize = {
+  id: number
+  name: string
+}
+
 export type ShopCustomsResult = {
   shopId: number
-  cakeSizes: string[]
+  cakeSizes: CakeSize[]
   customOptions: CustomOptionItem[]
 }
 
