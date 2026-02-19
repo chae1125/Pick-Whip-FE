@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getDraftDetail } from '@/apis/custom'
+import { getShopCustomOptions } from '@/apis/shop'
 import type { DraftDetailResult } from '@/types/custom-order'
+import type { CakeSize } from '@/apis/shop'
 
 type OrderProduct = {
   imageUrl: string
@@ -24,30 +26,31 @@ const dummyOrderProduct: OrderProduct = {
 
 type OrderInfoProps = {
   draftId?: string
+  shopId: number
 }
 
-const sizeLabels: Record<number, string> = {
-  0: '도시락',
-  1: '1호',
-  2: '2호',
-}
-
-export default function OrderInfo({ draftId }: OrderInfoProps) {
+export default function OrderInfo({ draftId, shopId }: OrderInfoProps) {
   const [draftData, setDraftData] = useState<DraftDetailResult | null>(null)
+  const [cakeSizes, setCakeSizes] = useState<CakeSize[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let alive = true
-    if (!draftId) return
 
-    const fetchDraft = async () => {
+    const fetchData = async () => {
       setLoading(true)
       setError(null)
       try {
-        const data = await getDraftDetail(Number(draftId))
+        const [shopCustoms, draftDetail] = await Promise.all([
+          getShopCustomOptions(shopId),
+          draftId ? getDraftDetail(Number(draftId)) : null,
+        ])
         if (!alive) return
-        setDraftData(data)
+        setCakeSizes(shopCustoms.cakeSizes)
+        if (draftDetail) {
+          setDraftData(draftDetail)
+        }
       } catch (e) {
         if (!alive) return
         setError(e instanceof Error ? e.message : '주문 정보를 불러오지 못했습니다.')
@@ -56,19 +59,19 @@ export default function OrderInfo({ draftId }: OrderInfoProps) {
       }
     }
 
-    fetchDraft()
+    fetchData()
     return () => {
       alive = false
     }
-  }, [draftId])
+  }, [draftId, shopId])
 
   const orderProduct: OrderProduct = draftData
     ? {
         imageUrl: draftData.referenceImageUrl || dummyOrderProduct.imageUrl,
         options: [
           ...(() => {
-            const sizeLabel =
-              sizeLabels[draftData.shopCakeSizeId] || `${draftData.shopCakeSizeId}호`
+            const cakeSize = cakeSizes.find((size) => size.id === draftData.shopCakeSizeId)
+            const sizeLabel = cakeSize ? cakeSize.name : `${draftData.shopCakeSizeId}호`
             const shapes = draftData.options.filter((o) => o.category === 'SHAPE')
             const shapeLabel = shapes.length > 0 ? shapes[0].optionName.replace(' 쉐입', '') : ''
 
