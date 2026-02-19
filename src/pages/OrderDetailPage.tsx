@@ -98,7 +98,7 @@ export default function OrderDetailPage() {
   return (
     <div className="min-h-screen w-full bg-[#FCF4F3] mt-14">
       <div className="container !px-5">
-        <OrderInfo draftId={draftId} />
+        <OrderInfo draftId={draftId} shopId={shopId} />
         <OrderUserForm
           name={customerName}
           phone={customerPhone}
