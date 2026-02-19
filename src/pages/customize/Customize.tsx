@@ -12,7 +12,7 @@ import ImageUploadStep from './ImageUploadStep'
 import Header from '@/components/customize/Header'
 import TopSidePreview from '@/components/customize/TopSidePreview'
 import CustomizeBottomSheet from '@/components/customize/CustomizeBottomSheet'
-import { getShopCustomOptions, type CustomOptionItem } from '@/apis/shop'
+import { getShopCustomOptions, type CustomOptionItem, type CakeSize } from '@/apis/shop'
 import { getDesignDetailForCustomize } from '@/apis/design'
 import { createCustomOrderDraft } from '@/apis/custom'
 import { getUserIdWithCookie } from '@/utils/auth'
@@ -62,7 +62,7 @@ export default function Customize() {
   const pickupDatetimeFromState = navState.pickupDatetime
   const navigate = useNavigate()
 
-  const [apiCakeSizes, setApiCakeSizes] = useState<string[]>([])
+  const [apiCakeSizes, setApiCakeSizes] = useState<CakeSize[]>([])
   const [apiOptions, setApiOptions] = useState<CustomOptionItem[]>([])
   const [apiLoaded, setApiLoaded] = useState(false)
   const [, setApiError] = useState<string | null>(null)
@@ -97,7 +97,7 @@ export default function Customize() {
           }
         })
 
-        setApiCakeSizes([res.cakeSize])
+        setApiCakeSizes([{ id: 0, name: res.cakeSize }])
         setApiOptions(customOptions)
 
         if (res.letteringText) {
@@ -184,7 +184,8 @@ export default function Customize() {
     '2호': { cm: '18cm', circleSize: 'w-18 h-18', scale: 'scale-100' },
   }
 
-  const mappedCakeSizes = (apiCakeSizes || []).map((label) => {
+  const mappedCakeSizes = (apiCakeSizes || []).map((cakeSize) => {
+    const label = cakeSize.name
     const sizeOption = apiOptions.find(
       (o) => o.optionName === label || (o.category === 'SIZE' && o.optionName === label),
     )
@@ -192,6 +193,7 @@ export default function Customize() {
 
     const visual = sizeVisuals[label] ?? { cm: '', circleSize: 'w-12 h-12', scale: '' }
     return {
+      id: cakeSize.id,
       label,
       cm: visual.cm,
       circleSize: visual.circleSize,
@@ -426,14 +428,12 @@ export default function Customize() {
         letteringAlignment = 'CENTER'
       }
 
-      let shopCakeSizeId = 1
-      if (selectedSize === '도시락') {
-        shopCakeSizeId = 11
-      } else if (selectedSize === '1호') {
-        shopCakeSizeId = 12
-      } else if (selectedSize === '2호') {
-        shopCakeSizeId = 13
+      const selectedCakeSize = mappedCakeSizes.find((s) => s.label === selectedSize)
+      if (!selectedCakeSize) {
+        alert('케이크 사이즈를 선택해주세요.')
+        return
       }
+      const shopCakeSizeId = selectedCakeSize.id
 
       const orderData = {
         shopId: shopIdFromState,
