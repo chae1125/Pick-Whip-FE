@@ -4,7 +4,7 @@ import { AxiosHeaders } from 'axios'
 
 type RetryConfig = AxiosRequestConfig & { _retry?: boolean }
 
-const baseURL = import.meta.env.PROD ? 'https://www.picknwhip.shop/api' : '/api'
+const baseURL = import.meta.env.PROD ? 'https://api.picknwhip.shop/api' : '/api'
 
 const instance = axios.create({
   baseURL,

@@ -1,8 +1,12 @@
-import { /* useEffect */ useState } from 'react'
-// import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import OrderDetailsCard, { type OrderDetail } from '../components/OrderDetailsCard'
 import letter from '../assets/img/letter.png'
 import { MessageCircle, CircleX, CircleCheckBig } from 'lucide-react'
+import type { CreateOrderResult } from '@/types/custom-order'
+import type { DraftDetailResult } from '@/types/custom-order'
+import { getShopCustomOptions } from '@/apis/shop'
+import type { CakeSize } from '@/apis/shop'
 
 function StatusIcon({ status }: { status: OrderDetail['status'] }) {
   if (status === 'PENDING' || status === 'ACCEPTED') {
@@ -21,48 +25,173 @@ function StatusIcon({ status }: { status: OrderDetail['status'] }) {
 }
 
 export default function OrderSheet() {
-  // const { orderId } = useParams<{ orderId: string }>()
-  const [order /* setOrder */] = useState<OrderDetail | null>(null)
-  // const navigate = useNavigate()
+  const { orderId } = useParams<{ orderId: string }>()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [order, setOrder] = useState<OrderDetail | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // useEffect(() => {
-  //   if (orderId === '1') {
-  //     setOrder({
-  //       id: 1,
-  //       shopLabel: '케이크샵',
-  //       shopName: '스위트 드림즈 베이커리',
-  //       productName: '크리스마스 파티 케이크',
-  //       pickupDate: '2025.12.24 (수)',
-  //       pickupTime: '10:00 AM',
-  //       orderCode: '#HKR6B04JZ',
-  //       items: [
-  //         {
-  //           imageUrl:
-  //             'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
-  //           rows: [
-  //             { label: '디자인', value: '1호 원형' },
-  //             { label: '맛', value: '초코 시트 + 생크림' },
-  //             { label: '레터링', value: ['메리크리스마스', '가운데 정렬 + 1번'] },
-  //             { label: '데코', value: '오레오' },
-  //             { label: '추가요청', value: '크리스마스 토퍼' },
-  //           ],
-  //         },
-  //       ],
-  //       status: 'REJECTED',
-  //       progress: [
-  //         { key: 'CREATED', title: '주문서 작성', at: '2025.12.10 14:30' },
-  //         { key: 'OWNER_CHECKED', title: '사장님 확인', at: '2025.12.11 09:15' },
-  //         { key: 'REJECTED', title: '제작 불가', at: '2025.12.11 10:00' },
-  //       ],
-  //       rejectMessage:
-  //         '해당 날짜에 예약이 마감되어 제작이 어렵습니다.\n날짜 변경을 원하시는 경우 채팅으로 문의 부탁드립니다.',
-  //     })
-  //   }
-  // }, [orderId])
+  const orderResult = location.state?.orderResult as CreateOrderResult | undefined
+  const draftData = location.state?.draftData as DraftDetailResult | undefined
+  const shopId = location.state?.shopId as number | undefined
+  const cakeName = location.state?.cakeName as string | undefined
+
+  useEffect(() => {
+    let alive = true
+
+    const buildOrderDetail = async () => {
+      if (!orderResult || !draftData || !shopId) {
+        console.warn('OrderSheet - 필수 데이터 없음. 직접 URL 접근일 수 있습니다.')
+        setLoading(false)
+        return
+      }
+
+      try {
+        const shopCustoms = await getShopCustomOptions(shopId)
+        if (!alive) return
+
+        const cakeSizes: CakeSize[] = shopCustoms.cakeSizes
+
+        const pickupDateObj = new Date(orderResult.pickupDatetime)
+        const formatDate = (date: Date) => {
+          const year = date.getFullYear()
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const day = String(date.getDate()).padStart(2, '0')
+          const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+          const weekday = weekdays[date.getDay()]
+          return `${year}.${month}.${day} (${weekday})`
+        }
+        const formatTime = (date: Date) => {
+          const hours = date.getHours()
+          const minutes = String(date.getMinutes()).padStart(2, '0')
+          const period = hours >= 12 ? 'PM' : 'AM'
+          const displayHours = hours % 12 || 12
+          return `${String(displayHours).padStart(2, '0')}:${minutes} ${period}`
+        }
+
+        const pickupDate = formatDate(pickupDateObj)
+        const pickupTime = formatTime(pickupDateObj)
+
+        const cakeSize = cakeSizes.find((size) => size.id === draftData.shopCakeSizeId)
+        const sizeLabel = cakeSize ? cakeSize.name : `${draftData.shopCakeSizeId}호`
+        const shapes = draftData.options.filter((o) => o.category === 'SHAPE')
+        const shapeLabel = shapes.length > 0 ? shapes[0].optionName.replace(' 쉐입', '') : ''
+
+        const sheets = draftData.options.filter((o) => o.category === 'SHEET')
+        const creams = draftData.options.filter((o) => o.category === 'CREAM')
+        const icings = draftData.options.filter((o) => o.category === 'ICING')
+
+        const toppingNames: string[] = []
+        const toppingsFromOptions = draftData.options.filter((o) => o.category === 'TOPPING')
+        if (toppingsFromOptions.length > 0) {
+          toppingNames.push(...toppingsFromOptions.map((t) => t.optionName))
+        }
+        const toppingsArray = draftData.toppings || []
+        if (toppingsArray.length > 0) {
+          toppingNames.push(...toppingsArray.map((t) => t.name))
+        }
+
+        const rows: { label: string; value: string | string[] }[] = [
+          {
+            label: '디자인',
+            value: shapeLabel ? `${sizeLabel} ${shapeLabel}` : sizeLabel,
+          },
+        ]
+
+        if (sheets.length > 0 || creams.length > 0) {
+          const sheetNames = sheets.map((s) => s.optionName).join(', ')
+          const creamNames = creams.map((c) => c.optionName).join(', ')
+          rows.push({
+            label: '맛',
+            value: [sheetNames, creamNames].filter(Boolean).join(' + '),
+          })
+        }
+
+        if (draftData.letteringText) {
+          rows.push({ label: '레터링', value: draftData.letteringText })
+        }
+
+        const decoParts: string[] = []
+        if (icings.length > 0) {
+          decoParts.push(icings.map((i) => i.optionName).join(', '))
+        }
+        if (toppingNames.length > 0) {
+          decoParts.push(toppingNames.join(', '))
+        }
+        if (decoParts.length > 0) {
+          rows.push({
+            label: '데코',
+            value: decoParts.join(' + '),
+          })
+        }
+
+        if (draftData.additionalRequest) {
+          rows.push({ label: '추가요청', value: draftData.additionalRequest })
+        }
+
+        const orderDetail: OrderDetail = {
+          id: orderResult.orderId,
+          shopName: orderResult.shopName,
+          productName: cakeName || '커스텀 케이크',
+          pickupDate,
+          pickupTime,
+          orderCode: orderResult.orderCode,
+          items: [
+            {
+              imageUrl:
+                draftData.referenceImageUrl ??
+                'https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?q=80&w=1000&auto=format&fit=crop',
+              rows,
+            },
+          ],
+          status: 'PENDING',
+          progress: [
+            {
+              key: 'CREATED',
+              title: '주문서 작성',
+              at: new Date().toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+              }),
+            },
+          ],
+        }
+
+        if (alive) {
+          setOrder(orderDetail)
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('주문 정보 구성 실패:', error)
+        if (alive) {
+          setLoading(false)
+        }
+      }
+    }
+
+    buildOrderDetail()
+    return () => {
+      alive = false
+    }
+  }, [orderId, orderResult, draftData, shopId, cakeName])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f7eeee] flex items-center justify-center">
+        <div className="text-center text-sm text-gray-500">주문 정보를 불러오는 중이에요…</div>
+      </div>
+    )
+  }
 
   if (!order) {
     return (
-      <div className="py-20 text-center text-sm text-gray-500">주문 정보를 불러오는 중이에요…</div>
+      <div className="min-h-screen bg-[#f7eeee] flex items-center justify-center">
+        <div className="py-20 text-center text-sm text-gray-500">주문 정보를 찾을 수 없습니다.</div>
+      </div>
     )
   }
 
@@ -106,7 +235,7 @@ export default function OrderSheet() {
                 <button
                   className="w-full rounded-full bg-white py-3 !text-[15px] font-bold text-[#2b2b2b] shadow-lg"
                   onClick={() => {
-                    // navigate('/orders')
+                    navigate('/order-request')
                   }}
                 >
                   목록 보기
@@ -115,7 +244,9 @@ export default function OrderSheet() {
                 <button
                   className="flex w-full items-center justify-center gap-2 rounded-full bg-[#57504F] py-3 !text-[15px] font-bold text-white shadow-lg"
                   onClick={() => {
-                    // navigate(`/chat/${order.id}`)
+                    if (shopId) {
+                      navigate(`/chat/${shopId}`)
+                    }
                   }}
                 >
                   <MessageCircle size={15} />
@@ -127,7 +258,7 @@ export default function OrderSheet() {
                 <button
                   className="flex-1 rounded-full bg-white py-3 !text-[15px] font-bold text-[#2b2b2b] shadow-lg"
                   onClick={() => {
-                    // navigate('/')
+                    navigate('/')
                   }}
                 >
                   홈으로
@@ -136,7 +267,7 @@ export default function OrderSheet() {
                 <button
                   className="flex-1 rounded-full bg-[#57504F] py-3 !text-[15px] font-bold text-white shadow-lg"
                   onClick={() => {
-                    // navigate('/orders')
+                    navigate('/request-history')
                   }}
                 >
                   목록 보기

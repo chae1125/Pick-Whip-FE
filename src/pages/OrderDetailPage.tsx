@@ -14,6 +14,7 @@ export default function OrderDetailPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const shopId = location.state?.shopId as number | undefined
+  const cakeName = location.state?.cakeName as string | undefined
   const [draftData, setDraftData] = useState<DraftDetailResult | null>(null)
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
@@ -50,9 +51,15 @@ export default function OrderDetailPage() {
         additionalRequest: additionalRequest.trim() || null,
       })
 
-      alert(`주문이 완료되었습니다!\n주문번호: ${result.orderCode}`)
-      // TODO: 주문 완료 페이지로 이동하거나 적절한 페이지로 리다이렉트
-      navigate('/', { replace: true })
+      navigate(`/order/sheet/${result.orderId}`, {
+        state: {
+          orderResult: result,
+          draftData,
+          shopId,
+          cakeName: cakeName || '커스텀 케이크',
+        },
+        replace: true,
+      })
     } catch (error) {
       console.error('주문 생성 실패:', error)
       alert('주문 생성에 실패했습니다.')
