@@ -63,7 +63,12 @@ export default function Login() {
   const KAKAO_AUTH_URL = import.meta.env.VITE_KAKAO_AUTH_URL
 
   const handleKakaoLogin = () => {
-    window.location.href = KAKAO_AUTH_URL
+    const baseURL = import.meta.env.PROD ? 'https://api.picknwhip.shop' : '/api'
+    const oauthUrl = KAKAO_AUTH_URL?.startsWith('http')
+      ? KAKAO_AUTH_URL
+      : `${baseURL}/oauth2/authorization/kakao`
+
+    window.location.href = oauthUrl
   }
 
   return (
