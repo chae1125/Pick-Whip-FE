@@ -227,10 +227,6 @@ export default function OrderDetailsCard({ order }: { order: OrderDetail }) {
           <div key={idx} className="flex gap-4">
             <div className="flex w-[78px] flex-col items-center">
               <img src={it.imageUrl} alt="" className="h-[78px] w-[78px] rounded-lg object-cover" />
-
-              <button className="mt-2 !text-[11px] font-semibold text-black underline underline-offset-3">
-                프리뷰 보기
-              </button>
             </div>
 
             <div className="min-w-0 flex-1">

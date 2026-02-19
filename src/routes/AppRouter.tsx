@@ -44,6 +44,11 @@ const router = createBrowserRouter([
     ],
   },
   {
+    path: '/order/sheet',
+    element: <BlankLayout />,
+    children: [{ path: ':orderId', element: <OrderSheet /> }],
+  },
+  {
     path: '/chat/:chatId',
     element: <ChatRoom />,
   },

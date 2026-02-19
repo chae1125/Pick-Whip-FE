@@ -97,7 +97,14 @@ export default function Customize() {
           }
         })
 
-        setApiCakeSizes([{ id: 0, name: res.cakeSize }])
+        if (shopIdFromState) {
+          const shopCustoms = await getShopCustomOptions(Number(shopIdFromState))
+          const matchedCakeSize = shopCustoms.cakeSizes.find((size) => size.name === res.cakeSize)
+          setApiCakeSizes(matchedCakeSize ? [matchedCakeSize] : [{ id: 0, name: res.cakeSize }])
+        } else {
+          setApiCakeSizes([{ id: 0, name: res.cakeSize }])
+        }
+
         setApiOptions(customOptions)
 
         if (res.letteringText) {
@@ -150,7 +157,7 @@ export default function Customize() {
     return () => {
       alive = false
     }
-  }, [designIdFromState])
+  }, [designIdFromState, shopIdFromState])
 
   useEffect(() => {
     let alive = true
@@ -460,7 +467,10 @@ export default function Customize() {
       const result = await createCustomOrderDraft(userId, orderData)
 
       navigate(`/order/detail/${result.customId}`, {
-        state: { shopId: shopIdFromState },
+        state: {
+          shopId: shopIdFromState,
+          cakeName: cakeNameFromState || '커스텀 케이크',
+        },
       })
     } catch (error) {
       console.error('주문 임시저장 실패:', error)
