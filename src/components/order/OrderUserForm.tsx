@@ -29,7 +29,6 @@ export default function OrderUserForm({
         <div>
           <span className="block mb-1 text-[12px] text-[#4A5565]">연락처</span>
           <input
-            type="tel"
             placeholder="010-0000-0000"
             value={phone}
             onChange={(e) => onPhoneChange(e.target.value)}
