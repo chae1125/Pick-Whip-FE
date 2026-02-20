@@ -1,20 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import ArrowLeftIcon from '../../assets/chat-icon/arrow-left.svg?react'
 import ChatListItem from '../../components/chat/ChatListItem'
 import { SearchInput } from '@/components/input/SearchInput'
 import { getChatRoomList } from '@/apis/chat'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 export default function ChatList() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
-  // TODO: 실제 userId 연결 필요
-  const userId = 1
+  const [userId, setUserId] = useState<number | null>(null)
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const id = await getUserIdWithCookie()
+      setUserId(id)
+    }
+    fetchUserId()
+  }, [])
 
   const { data } = useQuery({
     queryKey: ['chatRooms', userId, search],
-    queryFn: () => getChatRoomList({ userId, keyword: search, size: 100 }),
+    queryFn: () => getChatRoomList({ userId: userId!, keyword: search, size: 10 }),
+    enabled: !!userId,
   })
 
   const chatRooms = data?.chatRooms || []
