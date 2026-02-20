@@ -1,6 +1,5 @@
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import OrderInfo from '@/components/order/OrderInfo'
 import OrderUserForm from '@/components/order/OrderUserForm'
 import PickupDateTime from '@/components/order/PickupDateTime'
 import ExtraRequest from '@/components/order/ExtraRequest'
@@ -14,7 +13,7 @@ export default function OrderDetailPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const shopId = location.state?.shopId as number | undefined
-  const cakeName = location.state?.cakeName as string | undefined
+  // const cakeName = location.state?.cakeName as string | undefined
   const [draftData, setDraftData] = useState<DraftDetailResult | null>(null)
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
@@ -44,22 +43,15 @@ export default function OrderDetailPage() {
 
     setIsSubmitting(true)
     try {
-      const result = await createOrder({
+      await createOrder({
         draftId: Number(draftId),
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         additionalRequest: additionalRequest.trim() || null,
       })
 
-      navigate(`/order/sheet/${result.orderId}`, {
-        state: {
-          orderResult: result,
-          draftData,
-          shopId,
-          cakeName: cakeName || '커스텀 케이크',
-        },
-        replace: true,
-      })
+      alert('주문이 완료되었습니다!')
+      navigate('/', { replace: true })
     } catch (error) {
       console.error('주문 생성 실패:', error)
       alert('주문 생성에 실패했습니다.')
@@ -105,7 +97,6 @@ export default function OrderDetailPage() {
   return (
     <div className="min-h-screen w-full bg-[#FCF4F3] mt-14">
       <div className="container !px-5">
-        <OrderInfo draftId={draftId} shopId={shopId} />
         <OrderUserForm
           name={customerName}
           phone={customerPhone}
