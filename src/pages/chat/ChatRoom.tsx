@@ -9,6 +9,7 @@ import SendIcon from '../../assets/chat-icon/send-white.svg?react'
 import OrderListCard, { type OrderInfo } from '../../components/order-history/OrderListCard'
 import OrderDetailsCard, { type OrderDetail } from '../../components/OrderDetailsCard'
 import { getChatMessages } from '@/apis/chat'
+import { getUserIdWithCookie } from '@/utils/auth'
 
 // 임시 주문 데이터
 const DUMMY_ORDER_INFO: OrderInfo = {
@@ -61,23 +62,29 @@ export default function ChatRoom() {
 
   const [message, setMessage] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [userId, setUserId] = useState<number | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // TODO: 실제 userId 연결 필요
-  const userId = 1
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const id = await getUserIdWithCookie()
+      setUserId(id)
+    }
+    fetchUserId()
+  }, [])
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ['chatMessages', roomId],
+    queryKey: ['chatMessages', roomId, userId],
     queryFn: ({ pageParam }) =>
       getChatMessages({
         roomId: Number(roomId),
-        userId,
+        userId: userId!,
         cursor: pageParam ? Number(pageParam) : undefined,
         size: 20,
       }),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: !!roomId,
+    enabled: !!roomId && !!userId,
   })
 
   const messages = useMemo(() => {
