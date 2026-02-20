@@ -16,6 +16,7 @@ import {
 import { HamburgerButton } from './HamburgerButton'
 import { getMe, logout } from '@/apis/user'
 import { getUnreadCount } from '@/apis/notification'
+import { getOrderHistory } from '@/apis/order-history'
 import { getUserIdWithCookie } from '@/utils/auth'
 
 export function Header() {
@@ -27,6 +28,7 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [unreadCount, setUnreadCount] = useState<number>(0)
+  const [orderRequestCount, setOrderRequestCount] = useState<number>(0)
   const [me, setMe] = useState<null | {
     nickname: string
     email: string
@@ -119,6 +121,18 @@ export function Header() {
         console.error('안 읽은 알림 개수 조회 실패', e)
       })
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!isMounted) return
+
+    getOrderHistory({ type: 'REQUEST', limit: 100 })
+      .then((result) => {
+        setOrderRequestCount(result.content?.length ?? 0)
+      })
+      .catch((e) => {
+        console.error('주문 요청 내역 개수 조회 실패', e)
+      })
+  }, [isMounted])
 
   return (
     <>
@@ -218,7 +232,6 @@ export function Header() {
                 icon={<Clock size={18} />}
                 title="임시저장 주문"
                 desc="작성 중인 주문서를 확인하세요"
-                badge={3}
                 onClick={() => {
                   close()
                   navigate('/drafts')
@@ -228,7 +241,7 @@ export function Header() {
                 icon={<FileText size={18} />}
                 title="주문 요청 내역"
                 desc="작성한 주문서를 확인하세요"
-                badge={2}
+                badge={orderRequestCount}
                 onClick={() => {
                   close()
                   navigate('/request-history')
@@ -238,7 +251,6 @@ export function Header() {
                 icon={<ShoppingBag size={18} />}
                 title="주문 완료 내역"
                 desc="결제 완료 후 제작 중인 주문 내역을 확인하세요"
-                badge={1}
                 onClick={() => {
                   close()
                   navigate('/complete-history')
