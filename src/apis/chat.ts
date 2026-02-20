@@ -15,7 +15,6 @@ import type {
 } from '@/types/chat'
 import { getResult } from '@/utils/response'
 
-// 내 채팅방 목록 조회
 export async function getChatRoomList(params: GetChatListParams): Promise<ChatRoomListResult> {
   const { userId, keyword, cursor, size = 10 } = params
 
